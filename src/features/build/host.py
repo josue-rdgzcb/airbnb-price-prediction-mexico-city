@@ -56,5 +56,9 @@ def add_host_verifications_grouped(df):
         group_host_verifications
     )
 
+    # Drop intermediate columns not needed in final dataset
+    drop_cols = ["host_verifications_list"]
+    df = df.drop(columns=[c for c in drop_cols if c in df.columns])
+
     return df
 
