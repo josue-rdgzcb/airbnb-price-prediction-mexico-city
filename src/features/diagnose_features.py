@@ -265,3 +265,191 @@ def build_numeric_diagnostics(df, target="log_price"):
     diag["scaling_suggestion"] = diag.apply(suggest_scaling, axis=1)
 
     return diag
+
+# ===========================================================
+# =================== CATEGORICAL DIAGNOSTICS ===============
+# ===========================================================
+
+import numpy as np
+import pandas as pd
+
+
+# =================== 1. CATEGORICAL DIAGNOSTICS ===================
+def categorical_diagnostics(df, target="log_price"):
+    """
+    Perform categorical diagnostics on DataFrame columns.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input DataFrame containing categorical features and target.
+
+    target : str, default="log_price"
+        Name of the target variable.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Table with diagnostics for each categorical feature.
+    """
+
+    results = []
+
+    # Select categorical columns
+    cat_cols = df.select_dtypes(
+        include=["object", "category", "bool"]
+    ).columns
+
+    for col in cat_cols:
+
+        series = df[col]
+
+        # Basic stats
+        nulls_pct = series.isna().mean()
+        unique = series.nunique(dropna=True)
+
+        # Frequency distribution
+        value_counts = series.value_counts(
+            normalize=True,
+            dropna=True
+        )
+
+        top_category_pct = (
+            value_counts.iloc[0]
+            if len(value_counts) > 0
+            else np.nan
+        )
+
+        # Rare categories (<1%)
+        rare_pct = (
+            value_counts[value_counts < 0.01].sum()
+            if len(value_counts) > 0
+            else 0
+        )
+
+        # Signal estimation:
+        # median target variance across categories
+        target_variance = (
+            df.groupby(col)[target]
+            .median()
+            .var()
+        )
+
+        results.append({
+            "feature": col,
+            "nulls_%": nulls_pct,
+            "unique_categories": unique,
+            "top_category_pct": top_category_pct,
+            "rare_categories_pct": rare_pct,
+            "target_median_variance": target_variance
+        })
+
+    return pd.DataFrame(results)
+
+
+# =================== 2. HEURISTICS: SIGNAL ===================
+def suggest_categorical_signal(row):
+    """
+    Suggest signal strength for categorical features.
+    """
+
+    variance = row["target_median_variance"]
+
+    if variance < 0.01:
+        return "low_signal"
+
+    elif variance < 0.05:
+        return "weak_signal"
+
+    return "useful_signal"
+
+
+# =================== 3. HEURISTICS: NULL TREATMENT ===================
+def suggest_categorical_null_treatment(row):
+    """
+    Suggest null treatment strategy.
+    """
+
+    nulls = row["nulls_%"]
+
+    if nulls == 0:
+        return "no_impute"
+
+    if nulls < 0.05:
+        return "mode"
+
+    return "missing_category"
+
+
+# =================== 4. HEURISTICS: ENCODING ===================
+def suggest_encoding(row):
+    """
+    Suggest encoding strategy based on cardinality and rarity.
+    """
+
+    unique = row["unique_categories"]
+    rare_pct = row["rare_categories_pct"]
+
+    # Binary variables
+    if unique == 2:
+        return "binary"
+
+    # Low-cardinality
+    if unique <= 10:
+
+        if rare_pct > 0.30:
+            return "group_rare + onehot"
+
+        return "onehot"
+
+    # Medium-cardinality
+    if unique <= 30:
+        return "frequency"
+
+    # High-cardinality
+    return "frequency/group_rare"
+
+
+# =================== 5. FINAL PIPELINE ===================
+def build_categorical_diagnostics(
+    df,
+    target="log_price"
+):
+    """
+    Build complete categorical diagnostics pipeline.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Input DataFrame containing categorical features.
+
+    target : str, default="log_price"
+        Target variable.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Diagnostics table with:
+        - signal suggestion
+        - null treatment suggestion
+        - encoding suggestion
+    """
+
+    diag = categorical_diagnostics(df, target)
+
+    diag["signal_suggestion"] = diag.apply(
+        suggest_categorical_signal,
+        axis=1
+    )
+
+    diag["null_treatment_suggestion"] = diag.apply(
+        suggest_categorical_null_treatment,
+        axis=1
+    )
+
+    diag["encoding_suggestion"] = diag.apply(
+        suggest_encoding,
+        axis=1
+    )
+
+    return diag
