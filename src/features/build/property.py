@@ -1,5 +1,5 @@
 # Import preprocessing function for string normalization
-from src.features.preprocess import normalize_string_column
+from src.features.preprocess.preprocess_utils import normalize_string_column
 
 # Map raw property_type strings into broader property groups
 def map_property_type(pt: str) -> str:

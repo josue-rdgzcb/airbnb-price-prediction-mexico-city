@@ -1,5 +1,5 @@
 # Import utility to parse stringified lists into Python lists
-from src.features.preprocess import parse_column
+from src.features.preprocess.preprocess_utils import parse_column
 
 
 # Create host_verifications_list column

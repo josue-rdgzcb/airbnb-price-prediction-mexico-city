@@ -1,12 +1,12 @@
 import re
 import pandas as pd
 # Import utility to parse stringified lists into Python lists
-from src.features.preprocess import parse_column
+from src.features.preprocess.preprocess_utils import parse_column
 
 
 # Import amenity parameters from settings
 from src.settings.features_params import (
-    SELECTED_AMENITIES,
+    AMENITIES_SCORE,
     AMENITIES_WEIGHTS
 )
     
@@ -164,7 +164,7 @@ def add_amenity_score(df):
     Compute weighted amenity score based on SELECTED_AMENITIES and AMENITIES_WEIGHTS.
     """
     df["amenity_score"] = 0.0
-    for col in SELECTED_AMENITIES:
+    for col in AMENITIES_SCORE:
         if col in df.columns:
             df["amenity_score"] += df[col] * AMENITIES_WEIGHTS[col]
             
