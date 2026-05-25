@@ -477,8 +477,9 @@ def boolean_diagnostics(df, target="log_price"):
 
     results = []
 
-    # Select boolean columns
-    bool_cols = df.select_dtypes(include=["bool", "str", "category"]).columns
+    bool_cols = df.select_dtypes(
+        include=["bool"]
+    ).columns
 
     for col in bool_cols:
 
@@ -486,12 +487,23 @@ def boolean_diagnostics(df, target="log_price"):
 
         true_pct = series.mean()
 
-        target_true = df.loc[series == True, target].median()
-        target_false = df.loc[series == False, target].median()
+        target_true = df.loc[
+            series == True,
+            target
+        ].median()
 
-        target_diff = abs(target_true - target_false)
+        target_false = df.loc[
+            series == False,
+            target
+        ].median()
 
-        corr = series.astype(int).corr(df[target])
+        target_diff = abs(
+            target_true - target_false
+        )
+
+        corr = series.astype(int).corr(
+            df[target]
+        )
 
         results.append({
             "feature": col,
@@ -502,3 +514,92 @@ def boolean_diagnostics(df, target="log_price"):
         })
 
     return pd.DataFrame(results)
+
+def suggest_boolean_signal(row):
+    """
+    Suggest signal strength for boolean feature.
+    """
+
+    diff = row["target_median_diff"]
+    corr = abs(row["corr_with_target"])
+
+    if diff >= 0.30 or corr >= 0.20:
+        return "strong_signal"
+
+    elif diff >= 0.15 or corr >= 0.10:
+        return "useful_signal"
+
+    elif diff >= 0.05 or corr >= 0.03:
+        return "weak_signal"
+
+    else:
+        return "low_signal"
+
+def suggest_boolean_null_treatment(row):
+    """
+    Suggest null treatment for boolean feature.
+    """
+
+    nulls = row["nulls_%"]
+
+    if nulls == 0:
+        return "no_impute"
+
+    elif nulls < 0.05:
+        return "mode"
+
+    else:
+        return "evaluate_missingness"
+    
+
+def suggest_boolean_keep(row):
+
+    true_pct = row["true_pct"]
+
+    diff = row["target_median_diff"]
+
+    corr = abs(row["corr_with_target"])
+
+    # Too common or too rare
+    if true_pct < 0.03 or true_pct > 0.95:
+        return "drop_candidate"
+
+    # Strong individual signal
+    if diff >= 0.30 and corr >= 0.15:
+        return "keep_candidate"
+
+    # Moderate candidate
+    if diff >= 0.20 and corr >= 0.10:
+        return "evaluate"
+
+    return "drop_candidate"
+
+def build_boolean_diagnostics(
+    df,
+    target="log_price"
+):
+    """
+    Build complete boolean diagnostics.
+    """
+
+    diag = boolean_diagnostics(
+        df,
+        target
+    )
+
+    diag["signal_suggestion"] = diag.apply(
+        suggest_boolean_signal,
+        axis=1
+    )
+
+    diag["null_treatment_suggestion"] = diag.apply(
+        suggest_boolean_null_treatment,
+        axis=1
+    )
+
+    diag["keep_suggestion"] = diag.apply(
+        suggest_boolean_keep,
+        axis=1
+    )
+
+    return diag
