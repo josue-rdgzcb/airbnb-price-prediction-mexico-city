@@ -19,6 +19,8 @@ def apply_onehot_encoding(
     -------
     pandas.DataFrame
     """
+
+    df = df.copy()
     
     if not ONEHOT_FEATURES:
         return df
