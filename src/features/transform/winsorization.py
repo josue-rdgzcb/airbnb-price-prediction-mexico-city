@@ -5,7 +5,8 @@ from src.settings.transform_config import (WINSOR_FEATURES)
 
 def apply_winsorization(
     df,
-    suffix="_winsor"
+    suffix="_winsor",
+    drop_original = True
 ):
     """
     Apply upper-tail winsorization.
@@ -20,6 +21,8 @@ def apply_winsorization(
     -------
     pandas.DataFrame
     """
+
+    df = df.copy()
 
     for col, config in WINSOR_FEATURES.items():
 
@@ -37,7 +40,8 @@ def apply_winsorization(
             upper
         )
 
-        # Drop original feature
-        df.drop(columns=col, inplace=True)
+    # Drop original feature
+    if drop_original:
+        df = df.drop(columns=WINSOR_FEATURES)
 
     return df
