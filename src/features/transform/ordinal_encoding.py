@@ -24,6 +24,8 @@ def apply_ordinal_encoding(
     pandas.DataFrame
     """
 
+    df = df.copy()
+
     if not ORDINAL_FEATURES:
         return df
 
