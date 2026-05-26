@@ -27,6 +27,9 @@ def normalize_percentage_columns(df):
     -------
     pandas.DataFrame
     """
+    if not PERCENTAGE_COLUMNS:
+            return df
+
     for col in PERCENTAGE_COLUMNS:
 
         df[col] = (
@@ -62,6 +65,9 @@ def convert_boolean_columns(df):
         "t": True,
         "f": False
     }
+
+    if not BOOLEAN_COLUMNS:
+            return df
 
     for col in BOOLEAN_COLUMNS:
 
