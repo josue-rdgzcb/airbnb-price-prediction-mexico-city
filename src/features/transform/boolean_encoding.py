@@ -8,6 +8,7 @@ def apply_boolean_encoding(df):
     True  -> 1
     False -> 0
     """
+    df = df.copy()
 
     for col in BOOLEAN_FEATURES:
 
