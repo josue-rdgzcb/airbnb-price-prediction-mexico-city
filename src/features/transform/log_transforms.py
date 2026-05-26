@@ -6,7 +6,8 @@ from src.settings.transform_config import LOG_FEATURES
 
 def apply_log_transformations(
     df,
-    suffix="_log"
+    suffix="_log",
+    drop_original=True
 ):
     """
     Apply log1p transformation to selected columns.
@@ -23,6 +24,8 @@ def apply_log_transformations(
     pandas.DataFrame
     """
 
+    df = df.copy()
+
     if not LOG_FEATURES:
             return df
 
@@ -30,7 +33,8 @@ def apply_log_transformations(
         # Create transformed feature
         df[f"{col}{suffix}"] = np.log1p(df[col])
 
-        # Drop original feature
-        df.drop(columns=col, inplace=True)
-
+    # Drop original feature
+    if drop_original:
+        df = df.drop(columns=LOG_FEATURES)
+    
     return df
