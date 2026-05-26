@@ -5,7 +5,8 @@ from src.settings.transform_config import (BINNING_FEATURES)
 
 def apply_binning(
     df,
-    suffix="_binned"
+    suffix="_binned",
+    drop_original = True
 ):
     """
     Apply statistical binning to selected variables.
@@ -20,6 +21,8 @@ def apply_binning(
     -------
     pandas.DataFrame
     """
+
+    df = df.copy()
 
     for col, config in BINNING_FEATURES.items():
 
@@ -55,7 +58,8 @@ def apply_binning(
                 f"for column '{col}'"
             )
         
-        # Drop original feature
-        df.drop(columns=col, inplace=True)
+    # Drop original feature
+    if drop_original:
+        df = df.drop(columns=BINNING_FEATURES)
 
     return df
