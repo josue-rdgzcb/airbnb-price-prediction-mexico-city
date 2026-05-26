@@ -20,6 +20,8 @@ def apply_frequency_encoding(
     -------
     pandas.DataFrame
     """
+
+    df = df.copy()
     
     if not FREQUENCY_FEATURES:
         return df
