@@ -1,4 +1,9 @@
-from src.settings.features_params import REVIEW_SCORE_COLUMNS
+import pandas as pd
+
+from src.settings.features_params import (
+    REVIEW_SCORE_COLUMNS,
+    REVIEW_SCORES_MEAN_BINS
+)
 
 # Feature: compute mean of review score columns
 def add_review_scores_mean(df):
@@ -21,5 +26,32 @@ def add_has_review(df):
     df = df.copy()
     df["has_review"] = df[REVIEW_SCORE_COLUMNS].notna().any(axis=1)
     return df
+
+# Feature: segment listings by review score quality
+def add_review_scores_mean_segment(df):
+    """
+    Segment listings by review score quality using
+    fixed bins from settings.REVIEW_SCORES_MEAN_BINS.
+
+    Labels are defined directly in the function.
+    """
+
+    df = df.copy()
+
+    df["review_scores_mean_segment"] = pd.cut(
+        df["review_scores_mean"],
+        bins=REVIEW_SCORES_MEAN_BINS,
+        labels=[
+            "low_review",
+            "medium_review",
+            "high_review"
+        ],
+        include_lowest=True
+    )
+
+    return df
+
+
+
 
 

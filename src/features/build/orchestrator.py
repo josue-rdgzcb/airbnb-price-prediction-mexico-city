@@ -19,11 +19,15 @@ from src.features.build.amenities import(
     add_amenity_score
 )
 
-from src.features.build.host import add_host_verifications_grouped
+from src.features.build.host import (
+    add_host_verifications_grouped,
+    add_host_total_listings_segment
+)
 
 from src.features.build.reviews import(
     add_review_scores_mean,
-    add_has_review
+    add_has_review,
+    add_review_scores_mean_segment
 )
 
 
@@ -46,8 +50,8 @@ def build_features(df):
         - PROPERTY features: property type grouping, room type grouping
         - BOOKING RESTRICTIONS features: minimum nights segment
         - AMENITIES features: amenities count, binned count, binary indicators, weighted score
-        - HOST features: grouped host verifications
-        - REVIEWS features: mean of review score columns, binary indicator for presence of reviews
+        - HOST features: grouped host verifications, host total listings segment
+        - REVIEWS features: mean of review score columns, binary indicator for presence of reviews, review scores mean segment
     """
 
     df = df.copy()  # Work on a copy to avoid modifying original DataFrame
@@ -62,7 +66,7 @@ def build_features(df):
     df = add_property_group_room(df)            # Room type grouping
 
     # BOOKINK RESTRICTIONS feaures
-    df = add_minimum_nights_segment(df)         # Minimun nights segment
+    df = add_minimum_nights_segment(df)         # Segment listings by minimum nights
 
     # AMENITIES features
     df = add_amenity_count(df)                  # Count number of amenities per listing
@@ -71,10 +75,13 @@ def build_features(df):
 
     # HOST features
     df = add_host_verifications_grouped(df)     # Group host verifications into categories
+    df = add_host_total_listings_segment(df)    # Segment hosts by total number of listings
 
     # REVIEWS features
     df = add_review_scores_mean(df)             # Compute mean of review score columns
     df = add_has_review(df)                     # Add binary indicator if listing has any review
+    df = add_review_scores_mean_segment(df)     # Segment listings by mean review score
+
 
     return df
 

@@ -1,6 +1,11 @@
 # Import utility to parse stringified lists into Python lists
 from src.features.preprocess.preprocess_utils import parse_column
 
+import pandas as pd
+
+from src.settings.features_params import (
+    HOST_TOTAL_LISTINGS_BINS
+)
 
 # Create host_verifications_list column
 def host_verifications_list(df):
@@ -62,3 +67,27 @@ def add_host_verifications_grouped(df):
 
     return df
 
+# Feature: segment hosts by portfolio size
+def add_host_total_listings_segment(df):
+    """
+    Segment hosts by total listings count using
+    fixed bins from settings.HOST_TOTAL_LISTINGS_BINS.
+
+    Labels are defined directly in the function.
+    """
+
+    df = df.copy()
+
+    df["host_total_listings_segment"] = pd.cut(
+        df["host_total_listings_count"],
+        bins=HOST_TOTAL_LISTINGS_BINS,
+        labels=[
+            "small_host",
+            "medium_host",
+            "large_host",
+            "professional_host"
+        ],
+        include_lowest=True
+    )
+
+    return df
