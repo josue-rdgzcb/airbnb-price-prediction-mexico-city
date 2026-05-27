@@ -36,6 +36,7 @@ def apply_ordinal_encoding(
         df[f"{col}{suffix}"] = (
             df[col]
             .map(mapping)
+            .astype("int64")
         )
 
     if drop_original:
