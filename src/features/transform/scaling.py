@@ -65,33 +65,12 @@ def apply_scaling(df):
 
         ],
 
-        remainder="passthrough"
+        remainder="passthrough",
+        verbose_feature_names_out=False
     )
 
-    scaled_array = scaler.fit_transform(df)
+    scaler.set_output(transform="pandas")
 
-    scaled_feature_order = (
-
-        ROBUST_SCALE_FEATURES +
-
-        MINMAX_SCALE_FEATURES +
-
-        STANDARD_SCALE_FEATURES +
-
-        [
-            col for col in df.columns
-            if col not in (
-                ROBUST_SCALE_FEATURES +
-                MINMAX_SCALE_FEATURES +
-                STANDARD_SCALE_FEATURES
-            )
-        ]
-    )
-
-    df = pd.DataFrame(
-        scaled_array,
-        columns=scaled_feature_order,
-        index=df.index
-    )
+    df = scaler.fit_transform(df)
 
     return df
