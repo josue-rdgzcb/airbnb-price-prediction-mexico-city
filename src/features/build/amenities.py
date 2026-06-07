@@ -1,34 +1,11 @@
 import re
 import pandas as pd
-# Import utility to parse stringified lists into Python lists
-from src.features.preprocess.preprocess_utils import parse_column
-
 
 # Import amenity parameters from settings
 from src.settings.features_params import (
     AMENITIES_SCORE,
     AMENITIES_WEIGHTS
 )
-    
-# Create amenities_list column by parsing stringified lists
-def amenities_list(df):
-    """
-    Parse the 'amenities' column into Python lists and
-    add a new column 'amenities_list' if not already present.
-    """
-    df["amenities_list"] = df["amenities"].apply(parse_column)
-    return df
-
-# Feature: count number of amenities per listing
-def add_amenity_count(df):
-    """
-    Add a feature column 'amenity_count' with the number of amenities per listing.
-    """
-    if "amenities_list" not in df.columns:
-        df = amenities_list(df)
-
-    df["amenity_count"] = df["amenities_list"].apply(len)
-    return df
 
 # Clean individual amenity string
 def _clean_amenity(a: str) -> str:
@@ -41,26 +18,25 @@ def _clean_amenity(a: str) -> str:
     return re.sub(r'[^a-z0-9\s+\-]', '', a.lower()).strip()
 
 
-# Cleaning and normalizing amenities list
-def amenities_list_clean(df):
+# Feature: count number of amenities per listing
+def add_amenity_count(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Clean and normalize amenities list:
-    - Ensure 'amenities_list' exists
-    - Create 'amenities_list_clean' with normalized strings
-    - Create 'amenities_set' for set-based operations
+    Add a feature column 'amenity_count' with the number of amenities per listing.
     """
+    df = df.copy()
+    df["amenity_count"] = df["amenities"].apply(len)
+    return df
 
-    if "amenities_list" not in df.columns:
-        df = amenities_list(df)
 
-    if "amenities_list_clean" not in df.columns:
-        df["amenities_list_clean"] = df["amenities_list"].apply(
-            lambda lst: [_clean_amenity(a) for a in lst]
-        )
-
-    if "amenities_set" not in df.columns:
-        df["amenities_set"] = df["amenities_list_clean"].apply(set)
-
+# Normalize amenities into a set for keyword matching
+def _amenities_set(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Create 'amenities_set' column with cleaned amenities as a set.
+    """
+    df = df.copy()
+    df["amenities_set"] = df["amenities"].apply(
+        lambda lst: {_clean_amenity(a) for a in lst}
+    )
     return df
 
 
@@ -78,14 +54,14 @@ def _has_keyword(s, include, exclude=None):
 
 
 # Adding special amenities features
-def add_special_amenities(df):
+def add_special_amenities(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add binary features for special amenities:
     - Washer (excluding dishwasher)
     - Pool (excluding pool table, whirlpool variants)
     - Streaming platforms (Netflix, HBO, etc.)
     """
-    df = amenities_list_clean(df)
+    df = _amenities_set(df)
 
     # Washer (excluding dishwasher)
     df["has_washer"] = df["amenities_set"].apply(
@@ -111,12 +87,11 @@ def add_special_amenities(df):
 
 
 # Adding simple amenities features
-def add_simple_amenities(df):
+def add_simple_amenities(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add binary features for a predefined list of simple amenities.
-    Returns DataFrame and list of created column names.
     """
-    df = amenities_list_clean(df)
+    df = _amenities_set(df)
 
     simple_amenities = [
         'wifi','kitchen','hot water','essentials','bed linens','microwave',
@@ -132,8 +107,6 @@ def add_simple_amenities(df):
         'first aid kit'
     ]
 
-    created_cols = []
-
     for amenity in simple_amenities:
         col = "has_" + amenity.replace(" ", "_").replace("+", "plus").replace("-", "_")
         df[col] = df["amenities_set"].apply(
@@ -144,28 +117,29 @@ def add_simple_amenities(df):
 
 
 # Feature: orchestrator -> combine special and simple amenities
-def add_has_amenity_features(df):
+def add_has_amenity_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Orchestrator: add both special and simple amenity features.
-    Returns DataFrame and list of created 'has_' columns.
     """
     df = add_special_amenities(df)
     df = add_simple_amenities(df)
 
-    # Drop intermediate columns not needed in final dataset
-    drop_cols = ["amenities_list", "amenities_list_clean", "amenities_set"]
-    df = df.drop(columns=[c for c in drop_cols if c in df.columns])
+    # Drop intermediate column not needed in final dataset
+    if "amenities_set" in df.columns:
+        df = df.drop(columns=["amenities_set"])
     
     return df
 
+
 # Feature: compute weighted amenity score
-def add_amenity_score(df):
+def add_amenity_score(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute weighted amenity score based on SELECTED_AMENITIES and AMENITIES_WEIGHTS.
     """
+    df = df.copy()
     df["amenity_score"] = 0.0
     for col in AMENITIES_SCORE:
         if col in df.columns:
             df["amenity_score"] += df[col] * AMENITIES_WEIGHTS[col]
-            
     return df
+

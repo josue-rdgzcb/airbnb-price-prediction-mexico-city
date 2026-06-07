@@ -6,7 +6,7 @@ from src.settings.features_params import (
 )
 
 # Feature: compute mean of review score columns
-def add_review_scores_mean(df):
+def add_review_scores_mean(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute the mean of all review score columns defined in REVIEW_SCORE_COLUMNS
     and add a new column 'review_scores_mean' to the DataFrame.
@@ -17,7 +17,7 @@ def add_review_scores_mean(df):
 
 
 # Feature: add binary indicator if listing has any review
-def add_has_review(df):
+def add_has_review(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add a binary feature 'has_review' to the DataFrame.
     The column is True if any of the review score columns
@@ -28,7 +28,7 @@ def add_has_review(df):
     return df
 
 # Feature: segment listings by review score quality
-def add_review_scores_mean_segment(df):
+def add_review_scores_mean_segment(df: pd.DataFrame) -> pd.DataFrame:
     """
     Segment listings by review score quality using
     fixed bins from settings.REVIEW_SCORES_MEAN_BINS.

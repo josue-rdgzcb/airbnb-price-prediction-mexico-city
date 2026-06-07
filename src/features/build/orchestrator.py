@@ -30,9 +30,11 @@ from src.features.build.reviews import(
     add_review_scores_mean_segment
 )
 
+import pandas as pd
+
 
 # ================= MAIN PIPELINE TO BUILD FEATURES FOR THE DATASET =================
-def build_features(df):
+def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     """
     Build engineered features for the dataset.

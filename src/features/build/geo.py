@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.neighbors import BallTree
 
 # Import external data loaders for POIs (points of interest)
@@ -59,7 +60,9 @@ def load_commercial_points():
     return get_pois_commercial()
 
 # Feature: distance to nearest attraction
-def add_distance_to_attractions(df):
+def add_distance_to_attractions(df: pd.DataFrame) -> pd.DataFrame:
+
+    df = df.copy()
 
     pois_attractions = load_attraction_points()
 
@@ -71,7 +74,9 @@ def add_distance_to_attractions(df):
     return df
 
 # Feature: density of attractions within 1 km radius
-def add_attractions_density(df):
+def add_attractions_density(df: pd.DataFrame) -> pd.DataFrame:
+
+    df = df.copy() 
 
     pois_attractions = load_attraction_points()
 
@@ -84,7 +89,9 @@ def add_attractions_density(df):
     return df
 
 # Feature: density of commercial POIs within 1 km radius
-def add_commercial_density(df):
+def add_commercial_density(df: pd.DataFrame) -> pd.DataFrame:
+
+    df = df.copy()
 
     pois_commercial = load_commercial_points()
 

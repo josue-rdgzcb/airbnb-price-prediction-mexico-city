@@ -1,21 +1,8 @@
-# Import utility to parse stringified lists into Python lists
-from src.features.preprocess.preprocess_utils import parse_column
-
 import pandas as pd
 
 from src.settings.features_params import (
     HOST_TOTAL_LISTINGS_BINS
 )
-
-# Create host_verifications_list column
-def host_verifications_list(df):
-    """
-    Parse the 'host_verifications' column into Python lists and
-    add a new column 'host_verifications_list' if not already present.
-    """
-    if "host_verifications_list" not in df.columns:
-        df["host_verifications_list"] = df["host_verifications"].apply(parse_column)
-    return df
 
 
 # Group host verifications into categories
@@ -48,27 +35,20 @@ def group_host_verifications(verif_list):
 
 
 # Feature: add grouped host verifications
-def add_host_verifications_grouped(df):
+def add_host_verifications_grouped(df: pd.DataFrame) -> pd.DataFrame:
     """
     Create a new column 'host_verifications_grouped' by applying group_host_verifications.
     """
     df = df.copy()
 
-    if "host_verifications_list" not in df.columns:
-        df = host_verifications_list(df)
-
-    df["host_verifications_grouped"] = df["host_verifications_list"].apply(
+    df["host_verifications_grouped"] = df["host_verifications"].apply(
         group_host_verifications
     )
-
-    # Drop intermediate columns not needed in final dataset
-    drop_cols = ["host_verifications_list"]
-    df = df.drop(columns=[c for c in drop_cols if c in df.columns])
 
     return df
 
 # Feature: segment hosts by portfolio size
-def add_host_total_listings_segment(df):
+def add_host_total_listings_segment(df: pd.DataFrame) -> pd.DataFrame:
     """
     Segment hosts by total listings count using
     fixed bins from settings.HOST_TOTAL_LISTINGS_BINS.
