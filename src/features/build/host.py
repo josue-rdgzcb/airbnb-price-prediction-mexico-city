@@ -68,6 +68,6 @@ def add_host_total_listings_segment(df: pd.DataFrame) -> pd.DataFrame:
             "professional_host"
         ],
         include_lowest=True
-    )
+    ).astype("object")
 
     return df

@@ -13,7 +13,8 @@ def add_minimum_nights_segment(df: pd.DataFrame) -> pd.DataFrame:
         df["minimum_nights"],
         bins=MINIMUM_NIGHTS_BINS,
         labels=["short_stay", "medium_stay", "long_term"]
-    )
+    ).astype("object")
+    
     return df
 
 

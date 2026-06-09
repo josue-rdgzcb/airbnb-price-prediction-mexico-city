@@ -16,15 +16,17 @@ def add_review_scores_mean(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# Feature: add binary indicator if listing has any review
+# Feature: add numeric binary indicator if listing has any review
 def add_has_review(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add a binary feature 'has_review' to the DataFrame.
-    The column is True if any of the review score columns
-    defined in REVIEW_SCORE_COLUMNS are non-null, otherwise False.
+    The column is 1.0 if any of the review score columns
+    defined in REVIEW_SCORE_COLUMNS are non-null, otherwise 0.0.
     """
     df = df.copy()
-    df["has_review"] = df[REVIEW_SCORE_COLUMNS].notna().any(axis=1)
+
+    df["has_review"] = df[REVIEW_SCORE_COLUMNS].notna().any(axis=1).astype(float)
+    
     return df
 
 # Feature: segment listings by review score quality
@@ -47,7 +49,7 @@ def add_review_scores_mean_segment(df: pd.DataFrame) -> pd.DataFrame:
             "high_review"
         ],
         include_lowest=True
-    )
+    ).astype("object")
 
     return df
 

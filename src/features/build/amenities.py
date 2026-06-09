@@ -66,7 +66,7 @@ def add_special_amenities(df: pd.DataFrame) -> pd.DataFrame:
     # Washer (excluding dishwasher)
     df["has_washer"] = df["amenities_set"].apply(
         lambda s: _has_keyword(s, ["washer"], ["dishwasher"])
-    )
+    ).astype(float)
 
     # Pool (excluding noise)
     df["has_pool"] = df["amenities_set"].apply(
@@ -75,13 +75,13 @@ def add_special_amenities(df: pd.DataFrame) -> pd.DataFrame:
             ["pool"],
             ["pool table", "whirlpool", "wirpool", "whirpool"]
         )
-    )
+    ).astype(float)
 
     # Streaming
     streaming_keywords = ['netflix','hbo','prime video','disney+','apple tv','hulu']
     df["has_streaming_platform"] = df["amenities_set"].apply(
         lambda s: any(any(k in a for k in streaming_keywords) for a in s)
-    )
+    ).astype(float)
 
     return df
 
@@ -111,7 +111,7 @@ def add_simple_amenities(df: pd.DataFrame) -> pd.DataFrame:
         col = "has_" + amenity.replace(" ", "_").replace("+", "plus").replace("-", "_")
         df[col] = df["amenities_set"].apply(
             lambda s: any(amenity in a for a in s)
-        )
+        ).astype(float)
 
     return df
 
