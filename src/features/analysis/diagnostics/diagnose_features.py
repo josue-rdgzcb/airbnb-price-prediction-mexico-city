@@ -5,16 +5,24 @@ import numpy as np
 # ===========================================================
 # =================== NUMERIC DIAGNOSTICS ===================
 # ===========================================================
-def numeric_diagnostics(df, target="log_price"):
+
+# Perform diagnostics for numeric features using a provided list of columns
+def numeric_diagnostics(
+    df: pd.DataFrame,
+    numeric_columns: list[str],
+    target: str = "log_price"
+) -> pd.DataFrame:
     """
-    Perform numeric diagnostics on DataFrame columns.
+    Perform numeric diagnostics on selected DataFrame columns.
 
     Parameters
     ----------
     df : pandas.DataFrame
         Input DataFrame containing numeric features and target.
+    numeric_columns : list of str
+        List of numeric columns to evaluate.
     target : str, default="log_price"
-        Name of the target variable used for correlation, excluded from the final diagnostics.
+        Name of the target variable used for correlation.
 
     Returns
     -------
@@ -28,10 +36,7 @@ def numeric_diagnostics(df, target="log_price"):
     """
     results = []
 
-    # Select numeric columns, excluding the target
-    num_cols = df.select_dtypes(include=[np.number]).columns.drop(target)
-
-    for col in num_cols:
+    for col in numeric_columns:
         series = df[col].dropna()
 
         # Outlier detection using IQR
@@ -41,7 +46,6 @@ def numeric_diagnostics(df, target="log_price"):
         outliers = ((series < q1 - 1.5*iqr) | (series > q3 + 1.5*iqr)).sum()
         outliers_pct = outliers / len(series)
 
-        # Collect diagnostics for each feature
         results.append({
             "feature": col,
             "nulls_%": df[col].isna().mean(),
@@ -57,23 +61,10 @@ def numeric_diagnostics(df, target="log_price"):
     return pd.DataFrame(results).set_index("feature").reset_index()
 
 
-# =================== HEURISTICS: NULL TREATMENT ===================
-def suggest_null_treatment(row):
+# Suggest null imputation strategy for numeric features
+def suggest_null_treatment(row: pd.Series) -> str:
     """
     Suggest null value treatment based on feature statistics.
-
-    Parameters
-    ----------
-    row : pandas.Series
-        Row from diagnostics table containing feature statistics.
-
-    Returns
-    -------
-    str
-        Suggested null treatment strategy:
-        - "no_impute" if no nulls
-        - "median" if skewed or with outliers
-        - "mean" otherwise
     """
     nulls = row["nulls_%"]
     skew = row["skew"]
@@ -81,182 +72,88 @@ def suggest_null_treatment(row):
 
     if nulls == 0:
         return "no_impute"
-
     if outliers > 0.05 or abs(skew) > 1:
         return "median"
-    else:
-        return "mean"
+    return "mean"
 
 
-# =================== HEURISTICS: TRANSFORMATION ===================
-def suggest_transform_treatment(row):
+# Suggest transformation method for numeric features (log, sqrt, winsorization)
+def suggest_transform_treatment(row: pd.Series) -> str:
     """
     Suggest a transformation treatment for a numeric feature based on skewness and outlier percentage.
-
-    Parameters
-    ----------
-    row : pandas.Series
-        A row from the diagnostics DataFrame containing at least:
-        - "skew": skewness of the feature
-        - "outliers_%": percentage of outliers detected
-
-    Returns
-    -------
-    str
-        Recommended transformation:
-        - "log" for strong skewness (> 2)
-        - "sqrt" for moderate skewness (> 1)
-        - "winsor_strong" for heavy outliers (> 10%)
-        - "winsor" for moderate outliers (> 5%)
-        - "no_transform" if no adjustment is needed
     """
-
     skew = abs(row["skew"])
     outliers = row["outliers_%"]
 
-    # Priority: strong skewness → log transform
     if skew > 2:
         return "log"
-
-    # Moderate skewness → square root transform
     if skew > 1:
         return "sqrt"
-
-    # Heavy outliers (without strong skew) → strong winsorization
     if outliers > 0.10:
         return "winsor_strong"
-
-    # Moderate outliers → winsorization
     if outliers > 0.05:
         return "winsor"
-
-    # Default: no transformation needed
     return "no_transform"
 
 
-# =================== HEURISTICS: BINNING ===================
-def suggest_binning(row):
+# Suggest binning strategy for numeric features (non-linear, extreme values, low variance)
+def suggest_binning(row: pd.Series) -> str:
     """
     Suggest whether a feature could benefit from binning.
-
-    Parameters
-    ----------
-    row : pandas.Series
-        Row from diagnostics table containing feature statistics.
-
-    Returns
-    -------
-    str
-        Binning suggestion:
-        - "binning_candidate" with reason
-        - "no_binning" otherwise
     """
     skew = abs(row["skew"])
     outliers = row["outliers_%"]
     corr = abs(row["corr_with_target"])
     std = row["std"]
 
-    # Candidates due to non-linearity (low correlation + skew)
     if corr < 0.1 and skew > 1:
         return "binning_candidate (non_linear)"
-
-    # Candidates due to extreme values
     if outliers > 0.10:
         return "binning_candidate (extreme_values)"
-
-    # Candidates due to low variance / discreteness
     if std < 1:
         return "binning_candidate (low_variance/discrete)"
-
     return "no_binning"
 
-# =================== HEURISTICS: SCALING ===================
-def suggest_scaling(row):
+
+# Suggest scaling method for numeric features (robust, standard, minmax)
+def suggest_scaling(row: pd.Series) -> str:
     """
     Suggest a scaling method based on outlier percentage and skewness.
-
-    Parameters
-    ----------
-    row : pandas.Series
-        Must contain 'outliers_%' and 'skew'.
-
-    Returns
-    -------
-    str
-        - "robust" if many outliers (> 5%)
-        - "standard" if distribution is near normal (skew < 0.5)
-        - "minmax" otherwise
     """
-
     outliers = row["outliers_%"]
     skew = abs(row["skew"])
 
-    # Many outliers → robust scaling
     if outliers > 0.05:
         return "robust"
-
-    # Distribution close to normal → standard scaling
     if skew < 0.5:
         return "standard"
-
-    # Default → min-max scaling
     return "minmax"
 
-# =================== HEURISTICS: SIGNAL ===================
-def suggest_signal(row):
+
+# Suggest signal strength category for numeric features based on correlation with target
+def suggest_signal(row: pd.Series) -> str:
     """
     Suggest signal strength based on correlation with target.
-
-    Parameters
-    ----------
-    row : pandas.Series
-        Must contain 'corr_with_target'.
-
-    Returns
-    -------
-    str
-        - "low_signal" if correlation < 0.05
-        - "weak_signal" if correlation < 0.15
-        - "useful_signal" otherwise
     """
-
     corr = abs(row["corr_with_target"])
 
-    # Very low correlation → low signal
     if corr < 0.05:
         return "low_signal"
-
-    # Weak correlation → weak signal
     elif corr < 0.15:
         return "weak_signal"
-
-    # Otherwise → useful signal
-    else:
-        return "useful_signal"
+    return "useful_signal"
 
 
-
-# =================== FINAL PIPELINE ===================
-def build_numeric_diagnostics(df, target="log_price"):
+# Build complete numeric diagnostics pipeline with all suggestions
+def build_numeric_diagnostics(
+    df: pd.DataFrame,
+    numeric_columns: list[str],
+    target: str = "log_price"
+) -> pd.DataFrame:
     """
     Build complete numeric diagnostics pipeline.
-    
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        Input DataFrame containing numeric features and target.
-    target : str, default="log_price"
-        Name of the target variable used for correlation, excluded from the final diagnostics.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Diagnostics table with:
-        - Null treatment suggestion
-        - Transformation suggestion
-        - Binning suggestion
     """
-    diag = numeric_diagnostics(df, target)
+    diag = numeric_diagnostics(df, numeric_columns, target)
 
     diag["signal_suggestion"] = diag.apply(suggest_signal, axis=1)
     diag["null_treatment_suggestion"] = diag.apply(suggest_null_treatment, axis=1)
@@ -266,6 +163,7 @@ def build_numeric_diagnostics(df, target="log_price"):
 
     return diag
 
+
 # ===========================================================
 # =================== CATEGORICAL DIAGNOSTICS ===============
 # ===========================================================
@@ -274,34 +172,37 @@ import numpy as np
 import pandas as pd
 
 
-# =================== 1. CATEGORICAL DIAGNOSTICS ===================
-def categorical_diagnostics(df, target="log_price"):
+## Perform diagnostics for categorical features using a provided list of columns
+def categorical_diagnostics(
+    df: pd.DataFrame,
+    categorical_columns: list[str],
+    target: str = "log_price"
+) -> pd.DataFrame:
     """
-    Perform categorical diagnostics on DataFrame columns.
+    Perform categorical diagnostics on selected DataFrame columns.
 
     Parameters
     ----------
     df : pandas.DataFrame
         Input DataFrame containing categorical features and target.
-
+    categorical_columns : list of str
+        List of categorical columns to evaluate.
     target : str, default="log_price"
         Name of the target variable.
 
     Returns
     -------
     pandas.DataFrame
-        Table with diagnostics for each categorical feature.
+        Table with diagnostics for each categorical feature, including:
+        - Percentage of nulls
+        - Number of unique categories
+        - Top category percentage
+        - Rare categories percentage (<1%)
+        - Variance of target median across categories
     """
-
     results = []
 
-    # Select categorical columns
-    cat_cols = df.select_dtypes(
-        include=["object", "category", "str"]
-    ).columns
-
-    for col in cat_cols:
-
+    for col in categorical_columns:
         series = df[col]
 
         # Basic stats
@@ -309,31 +210,15 @@ def categorical_diagnostics(df, target="log_price"):
         unique = series.nunique(dropna=True)
 
         # Frequency distribution
-        value_counts = series.value_counts(
-            normalize=True,
-            dropna=True
-        )
+        value_counts = series.value_counts(normalize=True, dropna=True)
 
-        top_category_pct = (
-            value_counts.iloc[0]
-            if len(value_counts) > 0
-            else np.nan
-        )
+        top_category_pct = value_counts.iloc[0] if len(value_counts) > 0 else np.nan
 
         # Rare categories (<1%)
-        rare_pct = (
-            value_counts[value_counts < 0.01].sum()
-            if len(value_counts) > 0
-            else 0
-        )
+        rare_pct = value_counts[value_counts < 0.01].sum() if len(value_counts) > 0 else 0
 
-        # Signal estimation:
-        # median target variance across categories
-        target_variance = (
-            df.groupby(col)[target]
-            .median()
-            .var()
-        )
+        # Signal estimation: variance of target median across categories
+        target_variance = df.groupby(col)[target].median().var()
 
         results.append({
             "feature": col,
@@ -347,46 +232,39 @@ def categorical_diagnostics(df, target="log_price"):
     return pd.DataFrame(results)
 
 
-# =================== 2. HEURISTICS: SIGNAL ===================
-def suggest_categorical_signal(row):
+# Suggest signal strength for categorical features based on target median variance
+def suggest_categorical_signal(row: pd.Series) -> str:
     """
     Suggest signal strength for categorical features.
     """
-
     variance = row["target_median_variance"]
 
     if variance < 0.01:
         return "low_signal"
-
     elif variance < 0.05:
         return "weak_signal"
-
     return "useful_signal"
 
 
-# =================== 3. HEURISTICS: NULL TREATMENT ===================
-def suggest_categorical_null_treatment(row):
+# Suggest null treatment strategy for categorical features
+def suggest_categorical_null_treatment(row: pd.Series) -> str:
     """
     Suggest null treatment strategy.
     """
-
     nulls = row["nulls_%"]
 
     if nulls == 0:
         return "no_impute"
-
     if nulls < 0.05:
         return "mode"
-
     return "missing_category"
 
 
-# =================== 4. HEURISTICS: ENCODING ===================
-def suggest_encoding(row):
+# Suggest encoding strategy for categorical features based on cardinality and rarity
+def suggest_encoding(row: pd.Series) -> str:
     """
     Suggest encoding strategy based on cardinality and rarity.
     """
-
     unique = row["unique_categories"]
     rare_pct = row["rare_categories_pct"]
 
@@ -396,10 +274,8 @@ def suggest_encoding(row):
 
     # Low-cardinality
     if unique <= 10:
-
         if rare_pct > 0.30:
             return "group_rare + onehot"
-
         return "onehot"
 
     # Medium-cardinality
@@ -410,11 +286,12 @@ def suggest_encoding(row):
     return "frequency/group_rare"
 
 
-# =================== 5. FINAL PIPELINE ===================
+# Build complete categorical diagnostics pipeline with signal, null, and encoding suggestions
 def build_categorical_diagnostics(
-    df,
-    target="log_price"
-):
+    df: pd.DataFrame,
+    categorical_columns: list[str],
+    target: str = "log_price"
+) -> pd.DataFrame:
     """
     Build complete categorical diagnostics pipeline.
 
@@ -422,7 +299,8 @@ def build_categorical_diagnostics(
     ----------
     df : pandas.DataFrame
         Input DataFrame containing categorical features.
-
+    categorical_columns : list of str
+        List of categorical columns to evaluate.
     target : str, default="log_price"
         Target variable.
 
@@ -434,30 +312,25 @@ def build_categorical_diagnostics(
         - null treatment suggestion
         - encoding suggestion
     """
+    diag = categorical_diagnostics(df, categorical_columns, target)
 
-    diag = categorical_diagnostics(df, target)
-
-    diag["signal_suggestion"] = diag.apply(
-        suggest_categorical_signal,
-        axis=1
-    )
-
-    diag["null_treatment_suggestion"] = diag.apply(
-        suggest_categorical_null_treatment,
-        axis=1
-    )
-
-    diag["encoding_suggestion"] = diag.apply(
-        suggest_encoding,
-        axis=1
-    )
+    diag["signal_suggestion"] = diag.apply(suggest_categorical_signal, axis=1)
+    diag["null_treatment_suggestion"] = diag.apply(suggest_categorical_null_treatment, axis=1)
+    diag["encoding_suggestion"] = diag.apply(suggest_encoding, axis=1)
 
     return diag
 
 
+# ===========================================================
 # =================== BOOLEAN DIAGNOSTICS ===================
+# ===========================================================
 
-def boolean_diagnostics(df, target="log_price"):
+# Perform diagnostics for boolean-like features (floats 0/1) using a provided list of columns
+def boolean_diagnostics(
+    df: pd.DataFrame,
+    boolean_columns: list[str],
+    target: str = "log_price"
+) -> pd.DataFrame:
     """
     Perform diagnostics for boolean features.
 
@@ -465,6 +338,9 @@ def boolean_diagnostics(df, target="log_price"):
     ----------
     df : pandas.DataFrame
         Input DataFrame.
+
+    boolean_columns : list of str
+        List of columns to treat as boolean features.
 
     target : str, default="log_price"
         Target variable.
@@ -477,33 +353,18 @@ def boolean_diagnostics(df, target="log_price"):
 
     results = []
 
-    bool_cols = df.select_dtypes(
-        include=["bool"]
-    ).columns
-
-    for col in bool_cols:
-
+    for col in boolean_columns:
         series = df[col]
 
+        # Interpret 1.0 as True and 0.0 as False
         true_pct = series.mean()
 
-        target_true = df.loc[
-            series == True,
-            target
-        ].median()
+        target_true = df.loc[series == 1.0, target].median()
+        target_false = df.loc[series == 0.0, target].median()
 
-        target_false = df.loc[
-            series == False,
-            target
-        ].median()
+        target_diff = abs(target_true - target_false)
 
-        target_diff = abs(
-            target_true - target_false
-        )
-
-        corr = series.astype(int).corr(
-            df[target]
-        )
+        corr = series.corr(df[target])
 
         results.append({
             "feature": col,
@@ -515,49 +376,48 @@ def boolean_diagnostics(df, target="log_price"):
 
     return pd.DataFrame(results)
 
-def suggest_boolean_signal(row):
+
+
+# Suggest signal strength category for a boolean feature based on target difference and correlation
+def suggest_boolean_signal(row: pd.Series) -> str:
     """
     Suggest signal strength for boolean feature.
     """
-
     diff = row["target_median_diff"]
     corr = abs(row["corr_with_target"])
 
     if diff >= 0.30 or corr >= 0.20:
         return "strong_signal"
-
     elif diff >= 0.15 or corr >= 0.10:
         return "useful_signal"
-
     elif diff >= 0.05 or corr >= 0.03:
         return "weak_signal"
-
     else:
         return "low_signal"
 
-def suggest_boolean_null_treatment(row):
+
+# Suggest appropriate null treatment strategy for a boolean feature
+def suggest_boolean_null_treatment(row: pd.Series) -> str:
     """
     Suggest null treatment for boolean feature.
     """
-
     nulls = row["nulls_%"]
 
     if nulls == 0:
         return "no_impute"
-
     elif nulls < 0.05:
         return "mode"
-
     else:
         return "evaluate_missingness"
-    
 
-def suggest_boolean_keep(row):
 
+# Suggest whether to keep or drop a boolean feature based on prevalence and signal strength
+def suggest_boolean_keep(row: pd.Series) -> str:
+    """
+    Suggest keep/drop decision for boolean feature.
+    """
     true_pct = row["true_pct"]
-
     diff = row["target_median_diff"]
-
     corr = abs(row["corr_with_target"])
 
     # Too common or too rare
@@ -574,32 +434,16 @@ def suggest_boolean_keep(row):
 
     return "drop_candidate"
 
-def build_boolean_diagnostics(
-    df,
-    target="log_price"
-):
+
+# Build complete diagnostics table for boolean features including signal, null treatment, and keep suggestions
+def build_boolean_diagnostics(df: pd.DataFrame, boolean_columns: list[str],  target: str = "log_price") -> pd.DataFrame:
     """
     Build complete boolean diagnostics.
     """
+    diag = boolean_diagnostics(df, boolean_columns, target)
 
-    diag = boolean_diagnostics(
-        df,
-        target
-    )
-
-    diag["signal_suggestion"] = diag.apply(
-        suggest_boolean_signal,
-        axis=1
-    )
-
-    diag["null_treatment_suggestion"] = diag.apply(
-        suggest_boolean_null_treatment,
-        axis=1
-    )
-
-    diag["keep_suggestion"] = diag.apply(
-        suggest_boolean_keep,
-        axis=1
-    )
+    diag["signal_suggestion"] = diag.apply(suggest_boolean_signal, axis=1)
+    diag["null_treatment_suggestion"] = diag.apply(suggest_boolean_null_treatment, axis=1)
+    diag["keep_suggestion"] = diag.apply(suggest_boolean_keep, axis=1)
 
     return diag
