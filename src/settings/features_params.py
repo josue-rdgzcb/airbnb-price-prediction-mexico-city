@@ -3,8 +3,14 @@
 # Booking restrictions / minimum nights bins
 MINIMUM_NIGHTS_BINS = [0, 3, 29, float("inf")]
 
+# Review scores mean bins
+REVIEW_SCORES_MEAN_BINS = [0, 4.819, 4.893, 5.0]
+
+# Host total listings count bins
+HOST_TOTAL_LISTINGS_BINS = [0, 2, 6, 21, 964]
+
 # List of selected amenity features to include in scoring
-SELECTED_AMENITIES = [
+AMENITIES_SCORE = [
     "has_washer",
     "has_pool",
     "has_kitchen",
@@ -66,10 +72,6 @@ AMENITIES_WEIGHTS = {
     "has_outdoor_furniture": 0.06844712668063994,
     "has_smoke_alarm": 0.05828566971124684,
 }
-
-# Fixed normalization bounds for amenity score (training set reference)
-AMENITIES_SCORE_MIN = 0.0
-AMENITIES_SCORE_MAX = 1.0
 
 # List of review score columns
 REVIEW_SCORE_COLUMNS = [
