@@ -4,7 +4,8 @@ import pandas as pd
 from src.settings.preprocess_settings import (
     MEAN_IMPUTE_FEATURES,
     MEDIAN_IMPUTE_FEATURES,
-    MOST_FREQUENT_IMPUTE_FEATURES,
+    MOST_FREQUENT_NUMERIC_FEATURES,
+    MOST_FREQUENT_CATEGORIC_FEATURES,
     MISSING_CATEGORY_IMPUTE_FEATURES
 )
 
@@ -46,8 +47,13 @@ def fit_imputers(df: pd.DataFrame) -> dict:
             "imputer": SimpleImputer(strategy="median")
         },
 
-        "most_frequent": {
-            "features": MOST_FREQUENT_IMPUTE_FEATURES,
+        "most_frequent_numeric": {
+            "features": MOST_FREQUENT_NUMERIC_FEATURES,
+            "imputer": SimpleImputer(strategy="most_frequent")
+        },
+
+        "most_frequent_categoric": {
+            "features": MOST_FREQUENT_CATEGORIC_FEATURES,
             "imputer": SimpleImputer(strategy="most_frequent")
         },
 
