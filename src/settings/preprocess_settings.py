@@ -35,9 +35,12 @@ MEAN_IMPUTE_FEATURES = [
 ]
 
 # MODE IMPUTATION
-MOST_FREQUENT_IMPUTE_FEATURES = [
-    "host_total_listings_segment",
+MOST_FREQUENT_NUMERIC_FEATURES = [
     "host_is_superhost"
+]
+
+MOST_FREQUENT_CATEGORIC_FEATURES = [
+    "host_total_listings_segment"
 ]
 
 # MISSING CATEGORY IMPUTATION
