@@ -174,6 +174,8 @@ def clean_features(df: pd.DataFrame) -> pd.DataFrame:
     -----
     1. Normalize percentage columns.
     2. Convert boolean columns.
+    3. Normalize string columns.
+    4. Parse columns
 
     Parameters
     ----------

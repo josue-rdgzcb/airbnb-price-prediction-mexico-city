@@ -76,7 +76,11 @@ def fit_encoders(df: pd.DataFrame) -> dict:
 # TRANSFORM ENCODERS
 # ==========================================================
 
-def transform_encoders(df: pd.DataFrame, encoders: dict) -> pd.DataFrame:
+def transform_encoders(
+    df: pd.DataFrame,
+    encoders: dict,
+    drop_original: bool = True
+) -> pd.DataFrame:
     """
     Apply all encodings using previously fitted encoders.
 
@@ -86,6 +90,8 @@ def transform_encoders(df: pd.DataFrame, encoders: dict) -> pd.DataFrame:
         Input dataframe to transform.
     encoders : dict
         Dictionary returned by fit_encoders().
+    drop_original : bool, default=True
+        If True, drop original categorical columns after encoding.
 
     Returns
     -------
@@ -95,7 +101,7 @@ def transform_encoders(df: pd.DataFrame, encoders: dict) -> pd.DataFrame:
     df = df.copy()
 
     # ======== Ordinal Encoding ======== 
-    
+
     ordinal_maps = encoders.get("ordinal", {})
 
     for col, mapping in ordinal_maps.items():
@@ -103,38 +109,41 @@ def transform_encoders(df: pd.DataFrame, encoders: dict) -> pd.DataFrame:
             new_col = f"{col}_ord"
             df[new_col] = df[col].map(mapping)
 
+            # Drop original feature
+            if drop_original:
+                df.drop(columns=[col], inplace=True)
+
     # ======== Frequency Encoding ======== 
 
     frequency_maps = encoders.get("frequency", {})
 
     for col, mapping in frequency_maps.items():
         if col in df.columns:
-            # Preserve NaNs, unknown categories → 0.0
             is_na = df[col].isna()
             new_col = f"{col}_freq"
             df[new_col] = df[col].map(mapping)
             df.loc[~is_na & df[new_col].isna(), new_col] = 0.0
 
+            # Drop original feature
+            if drop_original:
+                df.drop(columns=[col], inplace=True)
+
     # ======== One Hot Encoding ======== 
-    
+
     onehot_encoder = encoders.get("onehot")
 
     if ONE_HOT_ENCODING_FEATURES and onehot_encoder is not None:
         encoded_array = onehot_encoder.transform(df[ONE_HOT_ENCODING_FEATURES])
-
         # Generate the coded column names
         feature_names = onehot_encoder.get_feature_names_out(ONE_HOT_ENCODING_FEATURES)
 
-        encoded_df = pd.DataFrame(
-            encoded_array,
-            columns=feature_names,
-            index=df.index
-        )
+        encoded_df = pd.DataFrame(encoded_array, columns=feature_names, index=df.index)
 
-        # Delete the original columns
-        df = pd.concat(
-            [df.drop(columns=ONE_HOT_ENCODING_FEATURES), encoded_df],
-            axis=1
-        )
+        # Drop original feature
+        if drop_original:
+            df = pd.concat([df.drop(columns=ONE_HOT_ENCODING_FEATURES), encoded_df], axis=1)
+        else:
+            df = pd.concat([df, encoded_df], axis=1)
 
     return df
+

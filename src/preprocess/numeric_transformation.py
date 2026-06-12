@@ -11,7 +11,6 @@ from src.settings.preprocess_settings import (
 
 def log_transformation(
     df: pd.DataFrame,
-    suffix: str = "_log",
     drop_original: bool = True
 ) -> pd.DataFrame:
     """
@@ -36,7 +35,7 @@ def log_transformation(
 
     for col in LOG_FEATURES:
         # Create transformed feature
-        df[f"{col}{suffix}"] = np.log1p(df[col])
+        df[f"{col}_log"] = np.log1p(df[col])
 
     # Drop original feature
     if drop_original:
@@ -110,7 +109,6 @@ def fit_binners(df: pd.DataFrame) -> dict:
 def transform_binners(
     df: pd.DataFrame,
     binners: dict,
-    suffix: str = "_binned",
     drop_original: bool = True
 ) -> pd.DataFrame:
     """
@@ -140,15 +138,15 @@ def transform_binners(
 
     # Iterate over binners and apply binning to each feature
     for col, config in binners.items():
-        new_col = f"{col}{suffix}"
+        new_col = f"{col}_binned"
         df[new_col] = pd.cut(
             df[col],
             bins=config["bin_edges"],
             include_lowest=True
         )
-
+        
+    # Drop original feature
     if drop_original:
-        # Drop original features after binning
         df = df.drop(columns=list(binners.keys()))
 
     return df

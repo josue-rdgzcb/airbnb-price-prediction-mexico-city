@@ -78,9 +78,13 @@ def fit_scalers(df: pd.DataFrame) -> dict:
 
 # Apply scalers (inference step): transform dataset using learned scaling parameters
 # Replace original values with scaled versions for each feature group
+import pandas as pd
+
+
 def transform_scalers(
-    df: pd.DataFrame,
-    scalers: dict
+    df: pd.DataFrame, 
+    scalers: dict, 
+    drop_original: bool = True
 ) -> pd.DataFrame:
     """
     Apply previously fitted scalers.
@@ -88,13 +92,19 @@ def transform_scalers(
     Parameters
     ----------
     df : pandas.DataFrame
+        Dataset to transform.
 
     scalers : dict
         Dictionary returned by fit_scalers().
 
+    drop_original : bool, default True
+        If True, replaces the original columns with the scaled values.
+        If False, keeps original columns and creates new ones with specific suffixes.
+
     Returns
     -------
     pandas.DataFrame
+        Dataframe with scaled features.
     """
 
     df = df.copy()
@@ -102,34 +112,40 @@ def transform_scalers(
     # ======== Standard Scaling ========
 
     if STANDARD_SCALE_FEATURES:
-
-        df[STANDARD_SCALE_FEATURES] = (
-            scalers["standard"]
-            .transform(
-                df[STANDARD_SCALE_FEATURES]
-            )
+        scaled_values = scalers["standard"].transform(
+            df[STANDARD_SCALE_FEATURES]
         )
+
+        if drop_original:
+            df[STANDARD_SCALE_FEATURES] = scaled_values
+        else:
+            new_features = [f"{col}_std" for col in STANDARD_SCALE_FEATURES]
+            df[new_features] = scaled_values
 
     # ======== MinMax Scaling ========
 
     if MINMAX_SCALE_FEATURES:
+        scaled_values = scalers["minmax"].transform(df[MINMAX_SCALE_FEATURES])
 
-        df[MINMAX_SCALE_FEATURES] = (
-            scalers["minmax"]
-            .transform(
-                df[MINMAX_SCALE_FEATURES]
-            )
-        )
+        if drop_original:
+            df[MINMAX_SCALE_FEATURES] = scaled_values
+        else:
+            new_features = [
+                f"{col}_minmax" for col in MINMAX_SCALE_FEATURES
+            ]
+            df[new_features] = scaled_values
 
     # ======== Robust Scaling ========
 
     if ROBUST_SCALE_FEATURES:
+        scaled_values = scalers["robust"].transform(df[ROBUST_SCALE_FEATURES])
 
-        df[ROBUST_SCALE_FEATURES] = (
-            scalers["robust"]
-            .transform(
-                df[ROBUST_SCALE_FEATURES]
-            )
-        )
+        if drop_original:
+            df[ROBUST_SCALE_FEATURES] = scaled_values
+        else:
+            new_features = [
+                f"{col}_robust" for col in ROBUST_SCALE_FEATURES
+            ]
+            df[new_features] = scaled_values
 
     return df
