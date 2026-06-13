@@ -1,4 +1,5 @@
- 
+# High-level core dependencies for the project 
+
 numpy
 pandas
 matplotlib
@@ -7,6 +8,4 @@ seaborn
 joblib
 scipy
 geopandas
-
-# Install all dependencies with: pip install -r requirements.txt
-# Verify verify installation and versions with: python check_requirements.py
+xgboost
