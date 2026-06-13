@@ -14,7 +14,7 @@ from src.settings.preprocess_settings import (
 # ==========================================================
 
 # Fit imputers (training step): learn statistics from training data
-# Store strategy and fitted imputers for each feature group
+# Store fitted imputers and associated feature groups
 def fit_imputers(df: pd.DataFrame) -> dict:
     """
     Fit all imputers using the training dataset.
@@ -22,6 +22,9 @@ def fit_imputers(df: pd.DataFrame) -> dict:
     This function learns the imputation statistics
     (mean, median, mode, constant values) from the
     training data only.
+
+    Only features present in the input dataframe are 
+    fitted and registered.
 
     Parameters
     ----------
@@ -35,55 +38,133 @@ def fit_imputers(df: pd.DataFrame) -> dict:
         their associated feature groups.
     """
 
-    imputers = {
+    imputers = {}
 
-        "mean": {
-            "features": MEAN_IMPUTE_FEATURES,
-            "imputer": SimpleImputer(strategy="mean")
-        },
+    # ======== Mean Imputation ========
 
-        "median": {
-            "features": MEDIAN_IMPUTE_FEATURES,
-            "imputer": SimpleImputer(strategy="median")
-        },
+    mean_features = [
+        col
+        for col in MEAN_IMPUTE_FEATURES
+        if col in df.columns
+    ]
 
-        "most_frequent_numeric": {
-            "features": MOST_FREQUENT_NUMERIC_FEATURES,
-            "imputer": SimpleImputer(strategy="most_frequent")
-        },
+    if mean_features:
 
-        "most_frequent_categoric": {
-            "features": MOST_FREQUENT_CATEGORIC_FEATURES,
-            "imputer": SimpleImputer(strategy="most_frequent")
-        },
+        mean_imputer = SimpleImputer(
+            strategy="mean"
+        )
 
-        "missing_category": {
-            "features": MISSING_CATEGORY_IMPUTE_FEATURES,
-            "imputer": SimpleImputer(
-                strategy="constant",
-                fill_value="missing"
-            )
+        mean_imputer.fit(
+            df[mean_features]
+        )
+
+        imputers["mean"] = {
+            "features": mean_features,
+            "imputer": mean_imputer
         }
-    }
 
-    # Fit each imputer on training data
-    for config in imputers.values():
+    # ======== Median Imputation ========
 
-        features = config["features"]
+    median_features = [
+        col
+        for col in MEDIAN_IMPUTE_FEATURES
+        if col in df.columns
+    ]
 
-        if not features:
-            continue
+    if median_features:
 
-        config["imputer"].fit(df[features])
+        median_imputer = SimpleImputer(
+            strategy="median"
+        )
+
+        median_imputer.fit(
+            df[median_features]
+        )
+
+        imputers["median"] = {
+            "features": median_features,
+            "imputer": median_imputer
+        }
+
+    # ======== Most Frequent (Numeric) ========
+
+    numeric_features = [
+        col
+        for col in MOST_FREQUENT_NUMERIC_FEATURES
+        if col in df.columns
+    ]
+
+    if numeric_features:
+
+        numeric_imputer = SimpleImputer(
+            strategy="most_frequent"
+        )
+
+        numeric_imputer.fit(
+            df[numeric_features]
+        )
+
+        imputers["most_frequent_numeric"] = {
+            "features": numeric_features,
+            "imputer": numeric_imputer
+        }
+
+    # ======== Most Frequent (Categorical) ========
+
+    categoric_features = [
+        col
+        for col in MOST_FREQUENT_CATEGORIC_FEATURES
+        if col in df.columns
+    ]
+
+    if categoric_features:
+
+        categoric_imputer = SimpleImputer(
+            strategy="most_frequent"
+        )
+
+        categoric_imputer.fit(
+            df[categoric_features]
+        )
+
+        imputers["most_frequent_categoric"] = {
+            "features": categoric_features,
+            "imputer": categoric_imputer
+        }
+
+    # ======== Missing Category ========
+
+    missing_category_features = [
+        col
+        for col in MISSING_CATEGORY_IMPUTE_FEATURES
+        if col in df.columns
+    ]
+
+    if missing_category_features:
+
+        missing_category_imputer = SimpleImputer(
+            strategy="constant",
+            fill_value="missing"
+        )
+
+        missing_category_imputer.fit(
+            df[missing_category_features]
+        )
+
+        imputers["missing_category"] = {
+            "features": missing_category_features,
+            "imputer": missing_category_imputer
+        }
 
     return imputers
+
 
 # ==========================================================
 # TRANSFORM IMPUTERS
 # ==========================================================
 
 # Apply imputers (inference step): transform dataset using learned statistics
-# Replace missing values in each feature group with fitted imputers
+# Replace missing values using fitted imputers
 def transform_imputers(
     df: pd.DataFrame,
     imputers: dict
@@ -101,7 +182,7 @@ def transform_imputers(
         Dataset to transform.
 
     imputers : dict
-        Dictionary containing fitted imputers.
+        Dictionary returned by fit_imputers().
 
     Returns
     -------
@@ -116,10 +197,9 @@ def transform_imputers(
 
         features = config["features"]
 
-        if not features:
-            continue
+        imputer = config["imputer"]
 
-        df[features] = config["imputer"].transform(
+        df[features] = imputer.transform(
             df[features]
         )
 

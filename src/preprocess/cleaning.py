@@ -19,6 +19,9 @@ def normalize_percentage_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert percentage string columns into numeric values.
 
+    Only features present in the input dataframe are
+    processed.
+
     Example
     -------
     "87%" -> 0.87
@@ -34,12 +37,18 @@ def normalize_percentage_columns(df: pd.DataFrame) -> pd.DataFrame:
         Dataframe with normalized percentage columns.
     """
 
-    if not PERCENTAGE_COLUMNS:
-        return df
-
     df = df.copy()
 
-    for col in PERCENTAGE_COLUMNS:
+    available_features = [
+        col
+        for col in PERCENTAGE_COLUMNS
+        if col in df.columns
+    ]
+
+    if not available_features:
+        return df
+
+    for col in available_features:
 
         df[col] = (
             pd.to_numeric(
@@ -57,7 +66,9 @@ def normalize_percentage_columns(df: pd.DataFrame) -> pd.DataFrame:
 def convert_binary_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert indicators ("t"/"f") into numeric binary values.
-    This function maps text indicators into 1.0 and 0.0.
+
+    Only features present in the input dataframe are
+    processed.
 
     Example
     -------
@@ -73,22 +84,30 @@ def convert_binary_columns(df: pd.DataFrame) -> pd.DataFrame:
     Returns
     -------
     pd.DataFrame
-        Dataframe with converted numeric binary columns.
+        Dataframe with converted binary columns.
     """
-
-    if not BINARY_COLUMNS:
-        return df
 
     df = df.copy()
 
-    # Mapeo numérico que preserva la compatibilidad con NaN
+    available_features = [
+        col
+        for col in BINARY_COLUMNS
+        if col in df.columns
+    ]
+
+    if not available_features:
+        return df
+
     binary_mapping = {
         "t": 1.0,
         "f": 0.0
     }
 
-    for col in BINARY_COLUMNS:
-        df[col] = df[col].map(binary_mapping)
+    for col in available_features:
+
+        df[col] = df[col].map(
+            binary_mapping
+        )
 
     return df
 
@@ -96,8 +115,11 @@ def convert_binary_columns(df: pd.DataFrame) -> pd.DataFrame:
 # Normalize categorical string values (lowercase + replace spaces with underscores)
 def normalize_string_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Normalize string values by converting to lowercase
+    Normalize string values by converting them to lowercase
     and replacing spaces with underscores.
+
+    Only features present in the input dataframe are
+    processed.
 
     Example
     -------
@@ -105,32 +127,50 @@ def normalize_string_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    series : pd.Series
+    df : pd.DataFrame
+        Input dataframe.
 
     Returns
     -------
-    pd.Series
+    pd.DataFrame
+        Dataframe with normalized string columns.
     """
 
-    if not STRING_COLUMNS:
+    df = df.copy()
+
+    available_features = [
+        col
+        for col in STRING_COLUMNS
+        if col in df.columns
+    ]
+
+    if not available_features:
         return df
 
-    df = df.copy()
-    for col in STRING_COLUMNS:
+    for col in available_features:
+
         df[col] = (
             df[col]
             .astype(str)
             .str.lower()
             .str.strip()
-            .str.replace(" ", "_", regex=False)
+            .str.replace(
+                " ",
+                "_",
+                regex=False
+            )
         )
+
     return df
 
-# Parse column into Python lists
+# Parse stringified lists into Python lists
 def parse_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Convert a string representation of a Python list
-    into an actual Python list.
+    Convert string representations of Python lists
+    into actual Python lists.
+
+    Only features present in the input dataframe are
+    processed.
 
     Example
     -------
@@ -142,22 +182,49 @@ def parse_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     Parameters
     ----------
-    value : Any
+    df : pd.DataFrame
+        Input dataframe.
 
     Returns
     -------
-    list
+    pd.DataFrame
+        Dataframe with parsed list columns.
     """
-    if not PARSE_COLUMNS:
-        return df
 
     df = df.copy()
-    for col in PARSE_COLUMNS:
+
+    available_features = [
+        col
+        for col in PARSE_COLUMNS
+        if col in df.columns
+    ]
+
+    if not available_features:
+        return df
+
+    for col in available_features:
+
+        def safe_parse(value):
+
+            if pd.isna(value):
+                return []
+
+            if not isinstance(value, str):
+                return []
+
+            try:
+                return ast.literal_eval(value)
+
+            except (
+                ValueError,
+                SyntaxError
+            ):
+                return []
+
         df[col] = df[col].apply(
-            lambda val: [] if pd.isna(val) else (
-                ast.literal_eval(val) if isinstance(val, str) else []
-            )
+            safe_parse
         )
+
     return df
 
 

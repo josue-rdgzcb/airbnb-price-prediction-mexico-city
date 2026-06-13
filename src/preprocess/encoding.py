@@ -21,6 +21,9 @@ def fit_encoders(df: pd.DataFrame) -> dict:
     - Frequency encoding mappings
     - One-hot encoder categories
 
+    Only features present in the input dataframe are 
+    fitted and registered.
+
     Parameters
     ----------
     df : pandas.DataFrame
@@ -31,43 +34,69 @@ def fit_encoders(df: pd.DataFrame) -> dict:
     dict
         Dictionary containing fitted encoders and mappings.
     """
+
     encoders = {}
 
     # ======== Ordinal Encoding ========
 
-    # Register the static mapping so that the encoder dictionary is 
-    # self-contained and sufficient for production.
-    encoders["ordinal"] = ORDINAL_ENCODING_FEATURES or {}
+    ordinal_features = {
+        col: mapping
+        for col, mapping in ORDINAL_ENCODING_FEATURES.items()
+        if col in df.columns
+    }
 
-    # ======== Frequency Encoding ======== 
+    encoders["ordinal"] = {
+        "features": list(ordinal_features.keys()),
+        "mapping": ordinal_features
+    }
+
+    # ======== Frequency Encoding ========
+
+    frequency_features = [
+        col
+        for col in FREQUENCY_ENCODING_FEATURES
+        if col in df.columns
+    ]
 
     frequency_maps = {}
 
-    if FREQUENCY_ENCODING_FEATURES:
-        for col in FREQUENCY_ENCODING_FEATURES:
-            frequency_maps[col] = (
-                df[col]
-                .value_counts(normalize=True)
-                .to_dict()
-            )
+    for col in frequency_features:
 
-    encoders["frequency"] = frequency_maps
+        frequency_maps[col] = (
+            df[col]
+            .value_counts(normalize=True)
+            .to_dict()
+        )
+
+    encoders["frequency"] = {
+        "features": frequency_features,
+        "mapping": frequency_maps
+    }
 
     # ======== One Hot Encoding ========
 
-    if ONE_HOT_ENCODING_FEATURES:
+    onehot_features = [
+        col
+        for col in ONE_HOT_ENCODING_FEATURES
+        if col in df.columns
+    ]
+
+    if onehot_features:
+
         onehot_encoder = OneHotEncoder(
             handle_unknown="ignore",
             sparse_output=False,
             dtype=np.float32
         )
 
-        onehot_encoder.fit(df[ONE_HOT_ENCODING_FEATURES])
+        onehot_encoder.fit(
+            df[onehot_features]
+        )
 
-        encoders["onehot"] = onehot_encoder
-
-    else:
-        encoders["onehot"] = None
+        encoders["onehot"] = {
+            "features": onehot_features,
+            "encoder": onehot_encoder
+        }
 
     return encoders
 
@@ -98,52 +127,110 @@ def transform_encoders(
     pandas.DataFrame
         Dataframe with all encodings applied.
     """
+
     df = df.copy()
 
-    # ======== Ordinal Encoding ======== 
+    # ======== Ordinal Encoding ========
 
-    ordinal_maps = encoders.get("ordinal", {})
+    ordinal_config = encoders.get("ordinal", {})
+
+    ordinal_maps = ordinal_config.get(
+        "mapping",
+        {}
+    )
 
     for col, mapping in ordinal_maps.items():
-        if col in df.columns:
-            new_col = f"{col}_ord"
-            df[new_col] = df[col].map(mapping)
 
-            # Drop original feature
-            if drop_original:
-                df.drop(columns=[col], inplace=True)
+        new_col = f"{col}_ord"
 
-    # ======== Frequency Encoding ======== 
+        df[new_col] = df[col].map(mapping)
 
-    frequency_maps = encoders.get("frequency", {})
+        if drop_original:
+
+            df.drop(
+                columns=[col],
+                inplace=True
+            )
+
+    # ======== Frequency Encoding ========
+
+    frequency_config = encoders.get(
+        "frequency",
+        {}
+    )
+
+    frequency_maps = frequency_config.get(
+        "mapping",
+        {}
+    )
 
     for col, mapping in frequency_maps.items():
-        if col in df.columns:
-            is_na = df[col].isna()
-            new_col = f"{col}_freq"
-            df[new_col] = df[col].map(mapping)
-            df.loc[~is_na & df[new_col].isna(), new_col] = 0.0
 
-            # Drop original feature
-            if drop_original:
-                df.drop(columns=[col], inplace=True)
+        is_na = df[col].isna()
 
-    # ======== One Hot Encoding ======== 
+        new_col = f"{col}_freq"
 
-    onehot_encoder = encoders.get("onehot")
+        df[new_col] = df[col].map(mapping)
 
-    if ONE_HOT_ENCODING_FEATURES and onehot_encoder is not None:
-        encoded_array = onehot_encoder.transform(df[ONE_HOT_ENCODING_FEATURES])
-        # Generate the coded column names
-        feature_names = onehot_encoder.get_feature_names_out(ONE_HOT_ENCODING_FEATURES)
+        # Unseen categories → frequency 0
+        df.loc[
+            ~is_na & df[new_col].isna(),
+            new_col
+        ] = 0.0
 
-        encoded_df = pd.DataFrame(encoded_array, columns=feature_names, index=df.index)
-
-        # Drop original feature
         if drop_original:
-            df = pd.concat([df.drop(columns=ONE_HOT_ENCODING_FEATURES), encoded_df], axis=1)
+
+            df.drop(
+                columns=[col],
+                inplace=True
+            )
+
+    # ======== One Hot Encoding ========
+
+    onehot_config = encoders.get(
+        "onehot"
+    )
+
+    if onehot_config:
+
+        features = onehot_config["features"]
+
+        encoder = onehot_config["encoder"]
+
+        encoded_array = encoder.transform(
+            df[features]
+        )
+
+        feature_names = (
+            encoder.get_feature_names_out(
+                features
+            )
+        )
+
+        encoded_df = pd.DataFrame(
+            encoded_array,
+            columns=feature_names,
+            index=df.index
+        )
+
+        if drop_original:
+
+            df = pd.concat(
+                [
+                    df.drop(columns=features),
+                    encoded_df
+                ],
+                axis=1
+            )
+
         else:
-            df = pd.concat([df, encoded_df], axis=1)
+
+            df = pd.concat(
+                [
+                    df,
+                    encoded_df
+                ],
+                axis=1
+            )
 
     return df
-

@@ -7,50 +7,78 @@ from src.settings.preprocess_settings import (
     BINNING_FEATURES
 )
 
-# =============== LOG TRANSFORMATION ===============
+# ==========================================================
+# LOG TRANSFORMATION
+# ==========================================================
 
 def log_transformation(
     df: pd.DataFrame,
     drop_original: bool = True
 ) -> pd.DataFrame:
     """
-    Apply log1p transformation to selected columns.
+    Apply log1p transformation to selected numeric features.
+
+    Only features present in the input dataframe are
+    transformed.
 
     Parameters
     ----------
     df : pandas.DataFrame
+        Input dataset.
 
-    suffix : str, default="_log"
-        Suffix for transformed columns.
+    drop_original : bool, default=True
+        If True, original features are removed after
+        transformation.
+        If False, original features are preserved and
+        transformed features are appended with the "_log"
+        suffix.
 
     Returns
     -------
     pandas.DataFrame
+        Dataframe with log-transformed features.
     """
 
     df = df.copy()
 
-    if not LOG_FEATURES:
-            return df
+    available_features = [
+        col
+        for col in LOG_FEATURES
+        if col in df.columns
+    ]
 
-    for col in LOG_FEATURES:
-        # Create transformed feature
-        df[f"{col}_log"] = np.log1p(df[col])
+    if not available_features:
+        return df
 
-    # Drop original feature
+    # Create transformed features
+    for col in available_features:
+
+        df[f"{col}_log"] = np.log1p(
+            df[col]
+        )
+
+    # Remove original features
     if drop_original:
-        df = df.drop(columns=LOG_FEATURES)
-    
+
+        df = df.drop(
+            columns=available_features
+        )
+
     return df
 
 
-# =============== BINNING ===============
+# ==========================================================
+# BINNING
+# ==========================================================
 
 # Learn bin edges (training step) from dataset
-# Store method and edges for each feature in dictionary
+# Store method and learned bin edges for each feature
 def fit_binners(df: pd.DataFrame) -> dict:
     """
     Learn bin edges from training data.
+
+    Only features present in the input dataframe are
+    fitted and registered.
 
     Parameters
     ----------
@@ -60,18 +88,23 @@ def fit_binners(df: pd.DataFrame) -> dict:
     Returns
     -------
     dict
-        Dictionary containing learned bin edges
-        for each feature.
+        Dictionary containing fitted binning
+        configurations for each feature.
     """
 
     binners = {}
 
     for col, config in BINNING_FEATURES.items():
 
+        # Skip features that are not present
+        if col not in df.columns:
+            continue
+
         method = config.get("method", "qcut")
         bins = config.get("bins", 4)
 
-        # Quantile binning
+        # ======== Quantile Binning ========
+
         if method == "qcut":
 
             _, bin_edges = pd.qcut(
@@ -81,7 +114,8 @@ def fit_binners(df: pd.DataFrame) -> dict:
                 duplicates="drop"
             )
 
-        # Equal-width binning
+        # ======== Equal-Width Binning ========
+
         elif method == "cut":
 
             _, bin_edges = pd.cut(
@@ -98,13 +132,19 @@ def fit_binners(df: pd.DataFrame) -> dict:
             )
 
         binners[col] = {
+            "features": [col],
             "method": method,
             "bin_edges": bin_edges
         }
 
     return binners
 
-# Apply previously learned bin edges to dataset (inference step)
+
+# ==========================================================
+# TRANSFORM BINNERS
+# ==========================================================
+
+# Apply previously learned bin edges to dataset
 # Create new binned columns and optionally drop originals
 def transform_binners(
     df: pd.DataFrame,
@@ -120,10 +160,7 @@ def transform_binners(
         Dataset to transform.
 
     binners : dict
-        Dictionary containing fitted bin edges.
-
-    suffix : str, default="_binned"
-        Suffix appended to new binned columns.
+        Dictionary returned by fit_binners().
 
     drop_original : bool, default=True
         Whether to drop original columns after binning.
@@ -131,23 +168,36 @@ def transform_binners(
     Returns
     -------
     pandas.DataFrame
-        Transformed dataset with binned features.
+        Dataset with binned features.
     """
 
     df = df.copy()
 
-    # Iterate over binners and apply binning to each feature
-    for col, config in binners.items():
+    features_to_drop = []
+
+    # Apply fitted binning configuration
+    for config in binners.values():
+
+        col = config["features"][0]
+
         new_col = f"{col}_binned"
+
         df[new_col] = pd.cut(
             df[col],
             bins=config["bin_edges"],
             include_lowest=True
         )
-        
-    # Drop original feature
+
+        features_to_drop.extend(
+            config["features"]
+        )
+
+    # Remove original features if requested
     if drop_original:
-        df = df.drop(columns=list(binners.keys()))
+
+        df = df.drop(
+            columns=features_to_drop
+        )
 
     return df
 
