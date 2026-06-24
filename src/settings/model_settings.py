@@ -38,3 +38,34 @@ RF_PARAM_GRID = {
     "max_features": ["sqrt", "log2", None]
 }
 
+# XGBOOST SEARCH SPACE
+XGB_PARAM_GRID = {
+
+    # Number of boosting rounds
+    "n_estimators": [100, 200, 300, 500],
+
+    # Learning rate
+    "learning_rate": [0.01, 0.03, 0.05, 0.1],
+
+    # Maximum tree depth
+    "max_depth": [3, 4, 5, 6, 8],
+
+    # Minimum child weight
+    "min_child_weight": [1, 3, 5, 7],
+
+    # Minimum loss reduction required for a split
+    "gamma": [0, 0.1, 0.3, 0.5],
+
+    # Row subsampling
+    "subsample": [0.6, 0.8, 1.0],
+
+    # Column subsampling
+    "colsample_bytree": [0.6, 0.8, 1.0],
+
+    # L2 regularization
+    "reg_lambda": [0, 1, 5, 10],
+
+    # L1 regularization
+    "reg_alpha": [0, 0.1, 1]
+
+}
