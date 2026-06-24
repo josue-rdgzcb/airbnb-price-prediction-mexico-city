@@ -13,8 +13,7 @@ def tune_model(
     cv: int = 5,
     scoring: str = "r2",
     random_state: int = 42,
-    n_jobs: int = -1,
-    verbose: int = 2
+    n_jobs: int = -1
 ) -> RandomizedSearchCV:
     """
     Perform hyperparameter optimization using RandomizedSearchCV.
@@ -62,7 +61,7 @@ def tune_model(
         scoring=scoring,
         random_state=random_state,
         n_jobs=n_jobs,
-        verbose=verbose
+        verbose=1
     )
 
     search.fit(X_train, y_train)
