@@ -79,10 +79,10 @@ def cross_validate_model(
 
         print()
         print(
-            f"Mean R² {metric_name}: {results['mean']:.4f}"
+            f"Mean {metric_name}: {results['mean']:.4f}"
         )
         print(
-            f"Std R² {metric_name}:  {results['std']:.4f}"
+            f"Std {metric_name}:  {results['std']:.4f}"
         )
 
     return results
