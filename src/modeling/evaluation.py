@@ -79,9 +79,9 @@ def evaluate_model(
         "train_rmse": root_mean_squared_error(y_train, train_pred),
         "train_mae": mean_absolute_error(y_train, train_pred),
 
-        "val_r2": r2_score(y_eval, val_pred),
-        "val_rmse": root_mean_squared_error(y_eval, val_pred),
-        "val_mae": mean_absolute_error(y_eval, val_pred)
+        "eval_r2": r2_score(y_eval, val_pred),
+        "eval_rmse": root_mean_squared_error(y_eval, val_pred),
+        "eval_mae": mean_absolute_error(y_eval, val_pred)
     }
 
     # Metrics in original target scale
@@ -90,12 +90,12 @@ def evaluate_model(
         y_val_real = target_transform(y_eval)
         val_pred_real = target_transform(val_pred)
 
-        results["val_rmse_real"] = root_mean_squared_error(
+        results["eval_rmse_real"] = root_mean_squared_error(
             y_val_real,
             val_pred_real
         )
 
-        results["val_mae_real"] = mean_absolute_error(
+        results["eval_mae_real"] = mean_absolute_error(
             y_val_real,
             val_pred_real
         )
@@ -113,18 +113,18 @@ def evaluate_model(
         print(f"MAE:  {results['train_mae']:.4f}")
 
         print("\nEVALUATION SET")
-        print(f"R²:   {results['val_r2']:.4f}")
-        print(f"RMSE: {results['val_rmse']:.4f}")
-        print(f"MAE:  {results['val_mae']:.4f}")
+        print(f"R²:   {results['eval_r2']:.4f}")
+        print(f"RMSE: {results['eval_rmse']:.4f}")
+        print(f"MAE:  {results['eval_mae']:.4f}")
 
         if target_transform is not None:
 
             print("\nREAL PRICE METRICS (EVALUATION)")
             print(
-                f"RMSE ($): ${results['val_rmse_real']:,.2f}"
+                f"RMSE ($): ${results['eval_rmse_real']:,.2f}"
             )
             print(
-                f"MAE ($):  ${results['val_mae_real']:,.2f}"
+                f"MAE ($):  ${results['eval_mae_real']:,.2f}"
             )
 
     return results
