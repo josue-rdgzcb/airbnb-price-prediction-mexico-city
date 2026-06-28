@@ -71,7 +71,7 @@ def evaluate_model(
 
     # Generate predictions
     train_pred = model.predict(X_train)
-    val_pred = model.predict(X_eval)
+    eval_pred = model.predict(X_eval)
 
     results = {
 
@@ -79,16 +79,16 @@ def evaluate_model(
         "train_rmse": root_mean_squared_error(y_train, train_pred),
         "train_mae": mean_absolute_error(y_train, train_pred),
 
-        "eval_r2": r2_score(y_eval, val_pred),
-        "eval_rmse": root_mean_squared_error(y_eval, val_pred),
-        "eval_mae": mean_absolute_error(y_eval, val_pred)
+        "eval_r2": r2_score(y_eval, eval_pred),
+        "eval_rmse": root_mean_squared_error(y_eval, eval_pred),
+        "eval_mae": mean_absolute_error(y_eval, eval_pred)
     }
 
     # Metrics in original target scale
     if target_transform is not None:
 
         y_val_real = target_transform(y_eval)
-        val_pred_real = target_transform(val_pred)
+        val_pred_real = target_transform(eval_pred)
 
         results["eval_rmse_real"] = root_mean_squared_error(
             y_val_real,
