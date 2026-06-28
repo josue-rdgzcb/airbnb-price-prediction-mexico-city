@@ -1,0 +1,8 @@
+{
+    "model_name": "XGBoost Regressor",
+    "model_version": "1.0.0",
+    "target": "price",
+    "target_transformation": "log1p",
+    "algorithm": "XGBoost",
+    "created_at": "2026-06-27 16:14:12"
+}
