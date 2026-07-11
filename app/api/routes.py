@@ -91,12 +91,12 @@ def predict(
         ),
 
         market_price_lower=round(
-            insights["market_price_min"],
+            insights["market_price_lower"],
             2
         ),
 
         market_price_upper=round(
-            insights["market_price_max"],
+            insights["market_price_upper"],
             2
         ),
 
