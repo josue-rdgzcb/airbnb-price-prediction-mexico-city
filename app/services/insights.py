@@ -201,9 +201,9 @@ def generate_market_insights(
 
             "market_average": None,
 
-            "market_price_min": None,
+            "market_price_lower": None,
 
-            "market_price_max": None,
+            "market_price_upper": None,
 
             "listing_position": "Unknown",
 
@@ -219,19 +219,19 @@ def generate_market_insights(
 
     market_median = comparables["clean_price"].median()
 
-    market_price_min = comparables["clean_price"].quantile(0.25)
+    market_price_lower = comparables["clean_price"].quantile(0.25)
 
-    market_price_max = comparables["clean_price"].quantile(0.75)
+    market_price_upper = comparables["clean_price"].quantile(0.75)
 
     # ------------------------------------------------------
     # LISTING POSITION
     # ------------------------------------------------------
 
-    if predicted_price < market_price_min:
+    if predicted_price < market_price_lower:
 
         listing_position = "Below Market"
 
-    elif predicted_price > market_price_max:
+    elif predicted_price > market_price_upper:
 
         listing_position = "Above Market"
 
@@ -265,9 +265,9 @@ def generate_market_insights(
 
         "market_median": round(float(market_median), 2),
 
-        "market_price_min": round(float(market_price_min), 2),
+        "market_price_lower": round(float(market_price_lower), 2),
 
-        "market_price_max": round(float(market_price_max), 2),
+        "market_price_upper": round(float(market_price_upper), 2),
 
         "listing_position": listing_position,
 
