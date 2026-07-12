@@ -25,8 +25,8 @@ from app.frontend import ui_options as OPTIONS
 st.set_page_config(
     page_title=LABELS.APP_TITLE,
     page_icon="🏠",
-    layout="wide"
-)
+    layout="wide",
+    initial_sidebar_state="expanded")
 
 
 # ==========================================================
@@ -34,6 +34,7 @@ st.set_page_config(
 # ==========================================================
 
 API_URL = "http://127.0.0.1:8000/predict"
+
 
 
 # ==========================================================
@@ -87,13 +88,36 @@ def list_to_string(values: list[str]) -> str:
 # PAGE HEADER
 # ==========================================================
 
-st.title(LABELS.APP_TITLE)
-
-st.caption(
-    LABELS.APP_SUBTITLE
+st.markdown(
+    f"""
+    <div style="margin-bottom: 25px;">
+        <h1 style="
+            font-size: 38px; 
+            font-weight: 800; 
+            color: #222222; 
+            margin: 0 0 4px 0;
+        ">
+            {LABELS.APP_TITLE}
+        </h1>
+        <p style="
+            font-size: 16px; 
+            color: #717171; 
+            margin: 0;
+        ">
+            {LABELS.APP_SUBTITLE}
+        </p>
+    </div>
+    """, 
+    unsafe_allow_html=True
 )
 
-st.divider()
+welcome_message = st.empty()
+
+welcome_message.info(
+    "👈 **Welcome! Please fill in your listing details in the sidebar on the left**, "
+    "then click the **'Estimate Price'** button to generate your market analysis.",
+    icon="ℹ️"
+)
 
 # ==========================================================
 # SIDEBAR - LISTING INFORMATION FORM
@@ -102,7 +126,8 @@ st.divider()
 st.sidebar.title("🏠 Listing Information")
 
 st.sidebar.caption(
-    "Complete the property information."
+    "Complete the property information.  \n"  # 👈 Fíjate en los dos espacios antes de \n
+    "Provide accurate details to ensure a more precise price estimation."
 )
 
 # ------------------------------------------------------
@@ -158,8 +183,8 @@ bedrooms = st.sidebar.number_input(
 
 bathrooms = st.sidebar.number_input(
     LABELS.BATHROOMS,
-    min_value=0,
-    step=1
+    min_value=0.0,
+    step=0.5
 )
 
 beds = st.sidebar.number_input(
@@ -182,15 +207,18 @@ st.sidebar.divider()
 
 st.sidebar.subheader(LABELS.HOST_SECTION)
 
-host_is_superhost = st.sidebar.selectbox(
+superhost_selection = st.sidebar.selectbox(
     LABELS.HOST_IS_SUPERHOST,
-    OPTIONS.BOOLEAN_OPTIONS.keys()
+    list(OPTIONS.BOOLEAN_OPTIONS.keys())
 )
 
-instant_bookable = st.sidebar.selectbox(
+host_is_superhost = OPTIONS.BOOLEAN_OPTIONS[superhost_selection]
+
+instant_selection = st.sidebar.selectbox(
     LABELS.INSTANT_BOOKABLE,
-    OPTIONS.BOOLEAN_OPTIONS.keys()
+    list(OPTIONS.BOOLEAN_OPTIONS.keys())
 )
+instant_bookable = OPTIONS.BOOLEAN_OPTIONS[instant_selection]
 
 host_verifications = st.sidebar.multiselect(
     LABELS.HOST_VERIFICATIONS,
@@ -305,17 +333,50 @@ else:
 # PREDICTION
 # ==========================================================
 
-submitted = st.button(
-    LABELS.PREDICT_BUTTON,
-    use_container_width=True,
-    type="primary"
+st.markdown(
+    """
+    <style>
+    div.stButton > button[kind="primary"] {
+        height: 68px !important;
+        background-color: #FF385C !important; 
+    }
+    div.stButton > button[kind="primary"] p {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: white !important;
+    }
+    
+    /* Hover */
+    div.stButton > button[kind="primary"]:hover {
+        background-color: white !important;
+    }
+    /* Hover */
+    div.stButton > button[kind="primary"]:hover p {
+        color: #FF385C !important; 
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
+
+
+btn_col1, btn_col2, btn_col3 = st.columns([0.5, 1, 0.5])
+
+with btn_col2:
+    submitted = st.button(
+        LABELS.PREDICT_BUTTON,
+        use_container_width=True,
+        type="primary"
+    )
+
 
 if submitted:
 
     # ------------------------------------------------------
     # BUILD PAYLOAD
     # ------------------------------------------------------
+
+    welcome_message.empty()
 
     payload = {
 
@@ -334,63 +395,26 @@ if submitted:
         "minimum_nights": minimum_nights,
 
         # HOST
-        "host_is_superhost":
-            OPTIONS.BOOLEAN_OPTIONS[
-                host_is_superhost
-            ],
-
-        "host_verifications":
-            list_to_string(
-                host_verifications
-            ),
-
-        "host_total_listings_count":
-            host_total_listings,
-
-        "calculated_host_listings_count_entire_homes":
-            host_entire_homes,
-
-        "calculated_host_listings_count_private_rooms":
-            host_private_rooms,
-
-        "instant_bookable":
-            OPTIONS.BOOLEAN_OPTIONS[
-                instant_bookable
-            ],
+        "host_is_superhost": host_is_superhost,
+        "host_verifications": list_to_string(host_verifications),
+        "host_total_listings_count": host_total_listings,
+        "calculated_host_listings_count_entire_homes": host_entire_homes,
+        "calculated_host_listings_count_private_rooms": host_private_rooms,
+        "instant_bookable": instant_bookable,
 
         # REVIEWS
-        "review_scores_rating":
-            review_scores_rating,
-
-        "review_scores_accuracy":
-            review_scores_accuracy,
-
-        "review_scores_cleanliness":
-            review_scores_cleanliness,
-
-        "review_scores_checkin":
-            review_scores_checkin,
-
-        "review_scores_communication":
-            review_scores_communication,
-
-        "review_scores_location":
-            review_scores_location,
-
-        "review_scores_value":
-            review_scores_value,
+        "review_scores_rating": review_scores_rating,
+        "review_scores_accuracy": review_scores_accuracy,
+        "review_scores_cleanliness": review_scores_cleanliness,
+        "review_scores_checkin": review_scores_checkin,
+        "review_scores_communication": review_scores_communication,
+        "review_scores_location": review_scores_location,
+        "review_scores_value": review_scores_value,
 
         # AMENITIES
-        "amenities":
-            list_to_string(
-                amenities
-            )
+        "amenities": list_to_string(amenities)
 
     }
-
-    # TEMPORAL
-    st.subheader("Payload sent to API")
-    st.json(payload)
 
     # ------------------------------------------------------
     # CALL API
@@ -446,98 +470,172 @@ if submitted:
 
     st.markdown("---")
 
-    st.header(LABELS.RESULTS_SECTION)
+    st.subheader(LABELS.RESULTS_SECTION)
 
     # =====================================================
     # HERO PRICE
     # =====================================================
 
     st.markdown(
-        f"""
-        <div style="
-            text-align:center;
-            padding:30px;
-            border-radius:12px;
-            border:1px solid #d9d9d9;
-            background-color:#fafafa;
-            margin-bottom:25px;
+    f"""
+    <div style="
+        text-align: center;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background-color: #ffffff;
+        border: 1px solid #f0f0f0;
+        margin-bottom: 25px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    ">
+        <h4 style="
+            margin: 0 0 2px 0;
+            color: #484848;
+            font-weight: 500;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            line-height: 1.2;
         ">
-
-            <h4 style="margin-bottom:10px;">
-                {LABELS.ESTIMATED_PRICE}
-            </h4>
-
-            <h1 style="
-                font-size:52px;
-                color:#00A699;
-                margin-top:0px;
-                margin-bottom:0px;
-            ">
-                ${results["estimated_price"]:,.2f} MXN
-            </h1>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            {LABELS.ESTIMATED_PRICE}
+        </h4>
+        <h1 style="
+            font-size: 48px;
+            font-weight: 700;
+            color: #FF385C;
+            margin: 0;
+            line-height: 1.0;
+        ">
+            ${results["estimated_price"]:,.2f} <span style="font-size: 22px; font-weight: 500; color: #484848;">MXN</span>
+        </h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
     # =====================================================
     # MARKET METRICS
     # =====================================================
 
-    col1, col2, col3 = st.columns(3)
+    st.markdown(
+        """
+        <style>
+        .metric-card {
+            background-color: #ffffff;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            text-align: center;
+            height: 105px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .metric-label {
+            font-size: 16px;
+            color: #717171;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .metric-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #222222;
+            margin: 0;
+        }
+        .metric-value-highlight {
+            color: #FF385C;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col1:
 
-        st.metric(
-            LABELS.TYPICAL_MARKET_PRICE,
-            f"${results['typical_market_price']:,.2f}"
+    st.subheader(LABELS.INSIGHTS_SECTION)
+
+    m_col1, m_col2, m_col3 = st.columns(3)
+
+    with m_col1:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">{LABELS.TYPICAL_MARKET_PRICE}</div>
+                <div class="metric-value">${results['typical_market_price']:,.2f}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-    with col2:
-
-        st.metric(
-            LABELS.MARKET_PRICE_RANGE,
-            (
-                f"${results['market_price_lower']:,.0f}"
-                " - "
-                f"${results['market_price_upper']:,.0f}"
-            )
+    with m_col2:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">{LABELS.MARKET_PRICE_RANGE}</div>
+                <div class="metric-value" style="font-size: 26px;">
+                    ${results['market_price_lower']:,.0f} - ${results['market_price_upper']:,.0f}
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-    with col3:
-
-        st.metric(
-            LABELS.LISTING_POSITION,
-            results["listing_position"]
+    with m_col3:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">{LABELS.LISTING_POSITION}</div>
+                <div class="metric-value metric-value-highlight">{results["listing_position"]}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-    col1, col2, col3 = st.columns(3)
+    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
-    with col1:
+    d_col1, d_col2, d_col3 = st.columns(3)
 
-        st.metric(
-            LABELS.COMPARABLE_LISTINGS,
-            results["comparable_listings"]
+    with d_col1:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">{LABELS.COMPARABLE_LISTINGS}</div>
+                <div class="metric-value">{results["comparable_listings"]}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-    with col2:
-
-        st.metric(
-            LABELS.CONFIDENCE,
-            results["confidence"]
+    with d_col2:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">{LABELS.CONFIDENCE}</div>
+                <div class="metric-value">{results["confidence"]}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-    with col3:
-
-        st.metric(
-            LABELS.SEARCH_RADIUS,
-            f"{results['search_radius_km']} km"
+    with d_col3:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">{LABELS.SEARCH_RADIUS}</div>
+                <div class="metric-value">{results['search_radius_km']} km</div>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
+
 
     # =====================================================
     # SUMMARY
     # =====================================================
+
+    st.html("<div style='margin-block: 15px;'></div>")
 
     st.subheader(LABELS.SUMMARY)
 
@@ -557,11 +655,14 @@ if submitted:
 
         st.markdown(summary)
 
+
 # ==========================================================
 # LISTING PREVIEW
 # ==========================================================
 
-st.subheader("📋 Listing Preview")
+st.html("<div style='margin-block: 15px;'></div>")
+
+st.subheader(LABELS.PREVIEW_SECTION)
 
 with st.container(border=True):
 
@@ -595,68 +696,86 @@ with st.container(border=True):
     # PROPERTY DETAILS
     # --------------------------------------------------
 
+    st.markdown("#### 🛏️ Capacity & Space")
+
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("Guests", accommodates)
+        st.metric("**Guests**", accommodates)
 
     with col2:
-        st.metric("Bedrooms", bedrooms)
+        st.metric("**Bedrooms**", bedrooms)
 
     with col3:
-        st.metric("Bathrooms", bathrooms)
+        st.metric("**Bathrooms**", bathrooms)
 
     with col4:
-        st.metric("Beds", beds)
-
-    st.caption(
-        f"Minimum stay: **{minimum_nights} night(s)**"
-    )
+        st.metric("**Beds**", beds)
 
     st.divider()
 
     # --------------------------------------------------
-    # HOST & AMENITIES
+    # HOST
+    # --------------------------------------------------
+
+    st.markdown("#### 👤 Host")
+
+    status_col1, status_col2 = st.columns(2)
+
+    with status_col1:
+        if host_is_superhost == "t":
+            st.write("**Host Status:** ⭐ Superhost")
+        else:
+            st.write("**Host Status:** ☑️ Standard Host")
+
+    with status_col2:
+        if instant_bookable == "t":
+            st.write("**Booking:** ⚡ Instant Booking")
+        else:
+            st.write("**Booking:** 📅 Request to Book")
+
+    st.html("<div style='margin-block: 10px;'></div>")
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric("**Listings Managed**", host_total_listings)
+
+    with col2:
+        st.metric("**Entire Homes**", host_entire_homes)
+
+    with col3:
+        st.metric("**Private Rooms**", host_private_rooms)
+
+    with col4:
+        st.metric("**Verifications**", len(host_verifications))
+
+        if host_verifications:
+            preview = ", ".join(host_verifications)
+            st.caption(preview)
+
+        else:
+            st.caption("No verifications selected.")
+
+    st.divider()
+
+    # --------------------------------------------------
+    # AMENITIES & MINIMUM STAY
     # --------------------------------------------------
 
     col1, col2 = st.columns(2)
 
     with col1:
 
-        st.markdown("#### ⭐ Host")
+        st.markdown("#### 🌃 Minimum Stay")
 
-        if host_is_superhost == "t":
-            st.success("⭐ Superhost")
-        else:
-            st.info("Standard Host")
-
-        if instant_bookable == "t":
-            st.success("⚡ Instant Booking")
-
-        st.write(
-            f"**Listings Managed:** {host_total_listings}"
-        )
-
-        st.write(
-            f"Entire Homes: {host_entire_homes}"
-        )
-
-        st.write(
-            f"Private Rooms: {host_private_rooms}"
-        )
-
-        st.write(
-            f"Verifications: {len(host_verifications)}"
-        )
+        st.write(f"**Minimum nights:** {minimum_nights} night(s)")
 
     with col2:
 
-        st.markdown("#### 🛋 Amenities")
+        st.markdown("#### 📺 Amenities")
 
-        st.metric(
-            "Selected",
-            len(amenities)
-        )
+        st.metric("Selected", len(amenities))
 
         if amenities:
 
@@ -672,7 +791,7 @@ with st.container(border=True):
 
             st.caption("No amenities selected.")
 
-    st.divider()
+    st.divider()    
 
     # --------------------------------------------------
     # REVIEWS
@@ -687,7 +806,7 @@ with st.container(border=True):
         with col1:
 
             st.metric(
-                "Overall",
+                "Overall Rating",
                 review_scores_rating
             )
 
@@ -730,3 +849,23 @@ with st.container(border=True):
         st.info(
             "This listing has no reviews yet."
         )
+
+# --------------------------------------------------
+# Global Footer Signature (Sidebar Bottom)
+# --------------------------------------------------
+
+st.html("<div style='margin-block: 15px;'></div>")
+
+st.markdown(
+    """
+    <div style="text-align: center; color: #64748B; font-size: 18px; font-weight: 500;">
+        Developed by Josué Rodríguez
+        <div style="margin-top: 6px;">
+            <a href="https://github.com/josue-rdgzcb" target="_blank" style="color: #FF385C; font-weight: 700; text-decoration: underline;">
+                🔗 GitHub
+            </a>
+        </div>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
