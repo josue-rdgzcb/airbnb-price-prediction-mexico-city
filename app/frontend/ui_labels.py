@@ -10,11 +10,11 @@ frontend clean and maintainable.
 # PAGE
 # ==========================================================
 
-APP_TITLE = "Airbnb Smart Pricing"
+APP_TITLE = "🏡 Airbnb Smart Pricing"
 
 APP_SUBTITLE = (
-    "Estimate a fair nightly price for your Airbnb listing "
-    "based on similar properties in Mexico City."
+    "Predict optimal nightly rates and analyze market positioning using machine learning "
+    "and comparable listings in Mexico City."
 )
 
 
@@ -32,8 +32,18 @@ AMENITIES_SECTION = "Amenities"
 
 REVIEWS_SECTION = "Guest Reviews"
 
-RESULTS_SECTION = "Prediction Results"
 
+# ==========================================================
+# PAGE SECTIONS
+# ==========================================================
+
+RESULTS_SECTION = "🎯 Prediction Results"
+
+INSIGHTS_SECTION = "💡 Market Insights"
+
+PREVIEW_SECTION = "📋 Listing Preview"
+
+SUMMARY = "📊 Summary"
 
 # ==========================================================
 # LOCATION
@@ -114,7 +124,7 @@ AMENITIES = "Amenities"
 # BUTTONS
 # ==========================================================
 
-PREDICT_BUTTON = "✨ Estimate price and generate market insights"
+PREDICT_BUTTON = "🚀 Estimate price and generate market insights ✨"
 
 RESET_BUTTON = "Reset"
 
@@ -136,10 +146,3 @@ COMPARABLE_LISTINGS = "Comparable Listings"
 CONFIDENCE = "Confidence"
 
 SEARCH_RADIUS = "Search Radius"
-
-
-# ==========================================================
-# SUMMARY
-# ==========================================================
-
-SUMMARY = "Summary"
