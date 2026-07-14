@@ -146,6 +146,22 @@ def render_location_map():
 
         )
 
+        # --------------------------------------------------
+        # Validate location
+        # --------------------------------------------------
+
+        if neighbourhood is None:
+
+            st.warning(
+                "Please select a location inside Mexico City."
+            )
+
+            return None
+
+        # --------------------------------------------------
+        # Save selected location
+        # --------------------------------------------------
+
         st.session_state.selected_location = {
 
             "latitude": latitude,
@@ -164,56 +180,34 @@ def render_location_map():
 
     if st.session_state.selected_location is None:
 
-        st.info(
-            "Click on the map to choose the property location."
-        )
+        st.info("Click on the map to choose the property location.")
 
         return None
 
     location = st.session_state.selected_location
 
-    st.success("Location selected")
+    st.success("📍 Selected Location")
 
     col1, col2 = st.columns(2)
 
     with col1:
 
-        st.metric(
-
-            "Latitude",
-
-            f"{location['latitude']:.6f}"
-
-        )
+        st.metric("Latitude", f"{location['latitude']:.6f}")
 
     with col2:
 
-        st.metric(
+        st.metric("Longitude", f"{location['longitude']:.6f}")
 
-            "Longitude",
-
-            f"{location['longitude']:.6f}"
-
-        )
-
-    st.metric(
-
-        "Neighbourhood",
-
-        location["neighbourhood"]
-
-    )
+    st.metric("Neighbourhood", location["neighbourhood"])
 
     st.divider()
 
-    if st.button(
+    if (
 
-        "✅ Confirm Location",
+        location["neighbourhood"] is not None
 
-        use_container_width=True
+        and
 
-    ):
+        st.button("✅ Confirm Location", use_container_width=True)):
 
         return location
-
-    return None
