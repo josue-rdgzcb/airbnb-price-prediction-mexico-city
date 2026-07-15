@@ -1,0 +1,54 @@
+index,poi,neighbourhood,latitude,longitude
+1,Palacio de Bellas Artes,Cuauhtémoc,19.4352,-99.1412
+2,Zócalo / Centro Histórico,Cuauhtémoc,19.4317,-99.1386
+3,Alameda Central,Cuauhtémoc,19.4359,-99.1439
+4,Torre Latinoamericana,Cuauhtémoc,19.4336,-99.1406
+5,Museo Nacional de Arte (MUNAL),Cuauhtémoc,19.4362,-99.1394
+6,Catedral Metropolitana,Cuauhtémoc,19.434,-99.1332
+7,Monumento a la Revolución,Cuauhtémoc,19.437,-99.154
+8,Ángel de la Independencia,Cuauhtémoc,19.427,-99.1677
+9,Paseo de la Reforma,Cuauhtémoc,19.4275,-99.165
+10,Hemiciclo a Juárez,Cuauhtémoc,19.435,-99.1447
+11,Parque México,Cuauhtémoc,19.41,-99.171
+12,Parque España,Cuauhtémoc,19.412,-99.174
+13,Plaza Río de Janeiro,Cuauhtémoc,19.415,-99.162
+14,Avenida Álvaro Obregón,Cuauhtémoc,19.4165,-99.1635
+15,Avenida Amsterdam,Cuauhtémoc,19.411,-99.1715
+16,Fuente de Cibeles,Cuauhtémoc,19.4188,-99.1653
+17,Museo Nacional de Antropología,Miguel Hidalgo,19.426,-99.186
+18,Bosque de Chapultepec,Miguel Hidalgo,19.42,-99.182
+19,Castillo de Chapultepec,Miguel Hidalgo,19.4204,-99.181
+20,Avenida Presidente Masaryk,Miguel Hidalgo,19.432,-99.197
+21,Parque Lincoln,Miguel Hidalgo,19.433,-99.195
+22,Museo Soumaya,Miguel Hidalgo,19.44,-99.203
+23,Museo Jumex,Miguel Hidalgo,19.4395,-99.2038
+24,Plaza Carso,Miguel Hidalgo,19.44,-99.203
+25,Coyoacán Centro,Coyoacán,19.349,-99.161
+26,Museo Frida Kahlo (Casa Azul),Coyoacán,19.3552,-99.162
+27,Jardín Centenario,Coyoacán,19.3495,-99.1615
+28,Fonoteca Nacional,Coyoacán,19.3432,-99.1561
+29,Parque La Mexicana,Cuajimalpa,19.36,-99.27
+30,Centro Comercial Santa Fe,Cuajimalpa,19.3605,-99.2705
+31,Expo Santa Fe,Cuajimalpa,19.3608,-99.271
+32,Xochimilco (Embarcaderos),Xochimilco,19.257,-99.106
+33,Ciudad Universitaria UNAM,Coyoacán,19.332,-99.188
+34,Estadio Azteca,Coyoacán,19.3031,-99.1505
+35,Basílica de Guadalupe,Gustavo A. Madero,19.484,-99.117
+36,Biblioteca Vasconcelos,Cuauhtémoc,19.4471,-99.1603
+37,Museo Franz Mayer,Cuauhtémoc,19.4373,-99.1443
+38,Plaza Santo Domingo,Cuauhtémoc,19.4368,-99.1334
+39,Plaza Garibaldi,Cuauhtémoc,19.44,-99.139
+40,Arena México,Cuauhtémoc,19.436,-99.15
+41,Zona Hotelera Reforma,Cuauhtémoc,19.428,-99.17
+42,Zona Roma Norte,Cuauhtémoc,19.4155,-99.165
+43,Zona Condesa,Cuauhtémoc,19.4125,-99.1725
+44,Zona Polanco,Miguel Hidalgo,19.4325,-99.1955
+45,Centro Cultural Los Pinos,Miguel Hidalgo,19.4157,-99.1917
+46,Auditorio Nacional,Miguel Hidalgo,19.4246,-99.1949
+47,Antara Fashion Hall,Miguel Hidalgo,19.4395,-99.2035
+48,Perisur,Coyoacán,19.3045,-99.1765
+49,Parque Hundido,Benito Juárez,19.3735,-99.1760
+50,Viveros de Coyoacán,Coyoacán,19.3570,-99.1770
+51,Parque Bicentenario,Azcapotzalco,19.4780,-99.1890
+52,Mercado de Coyoacán,Coyoacán,19.3485,-99.1620
+53,Mikitah,Miguel Hidalgo,19.4365,-99.1975

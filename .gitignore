@@ -1,28 +1,41 @@
-# virtual enviroment
+# ==============================================================================
+# ENVIRONMENT & IDES
+# ==============================================================================
 venv/
-
-# Environment variables
 .env
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Model artifacts
-models/*.pkl
-models/*.joblib
-
-# personal notes
-notes.txt
-
-# data
-data/raw
-data/external
-data/processed
-
-
-notes.txt
-
+.vscode/
 __pycache__/
 
-regresion_lineal.ipynb
+# ==============================================================================
+# JUPYTER NOTEBOOKS & NOTES
+# ==============================================================================
+.ipynb_checkpoints/
+notes.txt
+commits.txt
+
+# ==============================================================================
+# MODEL ARTIFACTS
+# ==============================================================================
+models/tuning/*.joblib
+models/candidates/*.joblib
+models/production/shap_explainer.joblib
+
+# ==============================================================================
+# DATA PIPELINE (Ignore large datasets, allow specific app assets)
+# ==============================================================================
+# 1. Ignore specific data subfolders entirely
+data/raw/
+
+# 2. Setup exclusions for external data (Ignore folder content, allow specific files)
+data/external/*
+!data/external/neighbourhoods.geojson
+!data/external/pois_attractions.csv
+!data/external/pois_commercial.csv
+
+# 3. Setup exclusions for processed data (Ignore folder content, allow specific files)
+data/processed/*
+!data/processed/df_features.csv
+
+
+
 
