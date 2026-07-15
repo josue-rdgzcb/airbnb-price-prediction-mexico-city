@@ -40,7 +40,13 @@ st.set_page_config(
 # API CONFIGURATION
 # ==========================================================
 
-API_URL = "http://127.0.0.1:8000/predict"
+try:
+
+    API_URL = st.secrets["API_URL"]
+
+except Exception:
+
+    API_URL = "http://127.0.0.1:8000/predict"
 
 
 
