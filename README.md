@@ -20,9 +20,11 @@ An **end-to-end Machine Learning project that predicts Airbnb nightly prices in 
 
 👉 https://airbnb-smart-pricing-cdmx.streamlit.app
 
-[Aqui irá el GIF de la app]
+<p align="center">
+    <img src="assets/demo.gif">
+</p>
 
-> *Note:* The backend API is hosted on Render's free tier. The first request after a period of inactivity may take a few seconds while the service wakes up.
+> *Note:* This application is deployed using Streamlit Community Cloud and Render's free tier. After a period of inactivity, the backend service may take up to a minute to wake up, so the first prediction request may be slightly delayed.
 
 ---
 
