@@ -9,3 +9,9 @@ joblib
 scipy
 geopandas
 xgboost
+shap
+fastapi
+uvicorn
+streamlit
+folium
+streamlit-folium
