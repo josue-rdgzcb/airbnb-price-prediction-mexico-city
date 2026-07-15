@@ -72,7 +72,7 @@ def predict_listing(payload: dict) -> dict:
     response = requests.post(
         API_URL,
         json=payload,
-        timeout=30
+        timeout=90
     )
 
     response.raise_for_status()
