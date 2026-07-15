@@ -13,10 +13,16 @@ recommendation together with market insights.
 import requests
 import streamlit as st
 import numpy as np
+import os
+import sys
 
-from app.frontend.map import render_location_map
-from app.frontend import ui_labels as LABELS
-from app.frontend import ui_options as OPTIONS
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
+from map import render_location_map
+import ui_labels as LABELS
+import ui_options as OPTIONS
 
 
 # ==========================================================
