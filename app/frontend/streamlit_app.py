@@ -14,6 +14,7 @@ import requests
 import streamlit as st
 import numpy as np
 
+from app.frontend.map import render_location_map
 from app.frontend import ui_labels as LABELS
 from app.frontend import ui_options as OPTIONS
 
@@ -97,7 +98,7 @@ st.markdown(
             color: #222222; 
             margin: 0 0 4px 0;
         ">
-            {LABELS.APP_TITLE}
+            🏡 {LABELS.APP_TITLE}
         </h1>
         <p style="
             font-size: 16px; 
@@ -136,20 +137,51 @@ st.sidebar.caption(
 
 st.sidebar.subheader(LABELS.LOCATION_SECTION)
 
-latitude = st.sidebar.number_input(
-    LABELS.LATITUDE,
-    format="%.6f"
-)
+# ------------------------------------------------------
+# Select location on map
+# ------------------------------------------------------
 
-longitude = st.sidebar.number_input(
-    LABELS.LONGITUDE,
-    format="%.6f"
-)
+@st.dialog("📍 Select Listing Location")
+def location_dialog():
 
-neighbourhood = st.sidebar.selectbox(
-    LABELS.NEIGHBOURHOOD,
-    OPTIONS.NEIGHBOURHOODS
-)
+    location = render_location_map()
+
+    if location is not None:
+
+        st.session_state.latitude = location["latitude"]
+        st.session_state.longitude = location["longitude"]
+        st.session_state.neighbourhood = location["neighbourhood"]
+
+        st.session_state.selected_location = None
+        st.session_state.map_error = None
+
+        st.rerun()
+
+st.sidebar.subheader(LABELS.LOCATION_SECTION)
+
+if st.sidebar.button("📍 Select on Map", use_container_width=True):
+
+    location_dialog()
+
+latitude = st.session_state.get("latitude", 19.4326)
+
+longitude = st.session_state.get("longitude", -99.1332)
+
+neighbourhood = st.session_state.get("neighbourhood", None)
+
+if neighbourhood is None:
+
+    st.sidebar.info("No location selected.")
+
+else:
+
+    st.sidebar.success("Location selected")
+
+    st.sidebar.write(f"**Neighbourhood**\n\n{neighbourhood}")
+
+    st.sidebar.write(f"**Latitude**\n\n{latitude:.6f}")
+
+    st.sidebar.write(f"**Longitude**\n\n{longitude:.6f}")
 
 st.sidebar.divider()
 
@@ -337,7 +369,7 @@ st.markdown(
     """
     <style>
     div.stButton > button[kind="primary"] {
-        height: 68px !important;
+        height: 56px !important;
         background-color: #FF385C !important; 
     }
     div.stButton > button[kind="primary"] p {

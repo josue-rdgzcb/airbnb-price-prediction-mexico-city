@@ -10,7 +10,7 @@ frontend clean and maintainable.
 # PAGE
 # ==========================================================
 
-APP_TITLE = "🏡 Airbnb Smart Pricing"
+APP_TITLE = "Airbnb Smart Pricing"
 
 APP_SUBTITLE = (
     "Predict optimal nightly rates and analyze market positioning using machine learning "
