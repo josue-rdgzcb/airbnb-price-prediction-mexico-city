@@ -6,8 +6,13 @@ Allows the user to choose a listing location on a Folium map.
 
 import folium
 import streamlit as st
-
 from streamlit_folium import st_folium
+import os
+import sys
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 from app.services.geolocation import get_neighbourhood
 
