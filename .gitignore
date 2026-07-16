@@ -1,38 +1,23 @@
-# ==============================================================================
-# ENVIRONMENT & IDES
-# ==============================================================================
 venv/
 .env
 .vscode/
 __pycache__/
-
-# ==============================================================================
-# JUPYTER NOTEBOOKS & NOTES
-# ==============================================================================
 .ipynb_checkpoints/
-notes.txt
-commits.txt
 
-# ==============================================================================
-# MODEL ARTIFACTS
-# ==============================================================================
+# Model artifacts
 models/tuning/*.joblib
 models/candidates/*.joblib
 models/production/shap_explainer.joblib
 
-# ==============================================================================
-# DATA PIPELINE (Ignore large datasets, allow specific app assets)
-# ==============================================================================
-# 1. Ignore specific data subfolders entirely
-data/raw/
+# data
+data/raw/*
+!data/raw/listings.csv
 
-# 2. Setup exclusions for external data (Ignore folder content, allow specific files)
 data/external/*
 !data/external/neighbourhoods.geojson
 !data/external/pois_attractions.csv
 !data/external/pois_commercial.csv
 
-# 3. Setup exclusions for processed data (Ignore folder content, allow specific files)
 data/processed/*
 !data/processed/df_features.csv
 
