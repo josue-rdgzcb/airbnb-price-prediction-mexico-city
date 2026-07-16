@@ -1,36 +1,36 @@
 # check_requirements.py
-# Script to verify installation and versions of libraries listed in requirements-dev.txt
+# Script to verify installation and versions of libraries listed in requirements.txt
 
 import importlib
+import importlib.metadata
 import os
 
-# Dictionary to map pip installation names to Python import names
-LIB_MAPPING = {
-    "scikit-learn": "sklearn",
-    "fonttools": "fontTools",
-    "pillow": "PIL",
-    "python-dateutil": "dateutil"
+# Map Python import names back to pip installation names
+IMPORT_MAPPING = {
+    "sklearn": "scikit-learn",
+    "fontTools": "fonttools",
+    "PIL": "pillow",
+    "dateutil": "python-dateutil",
+    "streamlit_folium": "streamlit-folium"
 }
 
-requirements_file = "requirements-dev.txt"
+# Map pip installation names to Python import names
+LIB_MAPPING = {v: k for k, v in IMPORT_MAPPING.items()}
+
+requirements_file = "requirements.txt"
 libraries = []
 
-print("📂 Reading requirements-dev.txt...\n")
+print("📂 Reading requirements.txt...\n")
 
-# 1. Read and parse the requirements file dynamically
 if os.path.exists(requirements_file):
     with open(requirements_file, "r") as file:
         for line in file:
             line = line.strip()
-            # Ignore empty lines or comments
             if not line or line.startswith("#"):
                 continue
             
-            # Split the line at operators like ==, >=, <=, etc.
-            # Example: "pandas==2.2.2" becomes "pandas"
+            # Extract package name by removing version operators
             lib_name = line.split("==")[0].split(">=")[0].split("<=")[0].split("~=")[0].strip()
-            
-            # Map to the correct import name if necessary
             import_name = LIB_MAPPING.get(lib_name.lower(), lib_name)
             
             if import_name not in libraries:
@@ -41,14 +41,21 @@ else:
 
 print("🔍 Checking installed libraries...\n")
 
-# 2. Verify each extracted library
 for lib in libraries:
     try:
         module = importlib.import_module(lib)
-        version = getattr(module, "__version__", "Version keyword not found")
+        pip_name = IMPORT_MAPPING.get(lib, lib)
+        
+        # Use importlib.metadata to safely retrieve the version from pip
+        try:
+            version = importlib.metadata.version(pip_name)
+        except importlib.metadata.PackageNotFoundError:
+            version = getattr(module, "__version__", "Version keyword not found")
+            
         print(f"✅ {lib}: {version}")
     except ImportError:
         print(f"❌ {lib}: Not installed")
 
 print("\n🏁 Check complete.")
+
 
