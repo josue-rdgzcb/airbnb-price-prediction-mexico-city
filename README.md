@@ -82,7 +82,7 @@ Every prediction follows the same feature engineering and preprocessing pipeline
 <br>
 
 > **Final Model:** Tuned XGBoost Regressor  
-> **Task:** Airbnb Nightly Price Prediction
+> **Task:** Airbnb Nightly Price Prediction  
 > **Test R²:** 0.7831  
 > **Cross-Validation R²:** 0.7587 ± 0.0122
 
@@ -210,6 +210,18 @@ uvicorn app.api.main:app --reload
 ```
 streamlit run app/frontend/app.py
 ```
+
+---
+
+## 💻 Future Improvements
+
+- **Model Explainability:** Integrate the existing SHAP explainability workflow directly into the Streamlit user interface to explain individual predictions and visualize the contribution of each feature to the estimated price.  
+
+- **Dynamic Pricing:** Incorporate temporal factors such as seasonality, holidays, local events, and weekends to recommend time-aware nightly prices.
+
+- **Automated Retraining:** Build a scheduled retraining pipeline that periodically updates the model using newly available Airbnb data.
+
+- **Advanced Geospatial Features:** Explore spatial indexing techniques (H3 or Geohash) and richer location embeddings to better capture neighborhood effects.
 
 ---
 
